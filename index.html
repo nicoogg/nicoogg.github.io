@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nicoogg · Developer Overview</title>
+<meta name="description" content="nicoogg: developer at GS Loft, building Corvex and wantdownload.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main class="frame">
+
+  <!-- ───────── left panel ───────── -->
+  <aside class="panel">
+    <header class="panel-head">
+      <svg class="mark" viewBox="0 0 32 32" aria-label="nicoogg"><g stroke="currentColor" stroke-width="3.2" stroke-linecap="square"><path d="M16 2v28M4 9l24 14M4 23l24-14"/></g></svg>
+      <nav class="tools">
+        <a class="tool x" href="https://github.com/nicoogg" target="_blank" rel="noopener" title="GitHub">
+          <svg viewBox="0 0 24 24"><path d="M9 19c-4 1.3-4-2-6-2.5m12 4.5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12 12 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+        </a>
+        <a class="tool x" href="https://github.com/GS-Loft-Dev" target="_blank" rel="noopener" title="GS Loft">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="1"/><path d="M3 10h18M8 3v4M16 3v4"/><text x="12" y="18.5" font-size="6.5" text-anchor="middle" stroke="none" fill="currentColor" font-family="Geist Mono">GS</text></svg>
+        </a>
+        <a class="tool x" href="https://corvexdevelops.github.io/" target="_blank" rel="noopener" title="Corvex">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>
+        </a>
+        <a class="tool x" href="https://wantdownload.vercel.app/app" target="_blank" rel="noopener" title="wantdownload">
+          <svg viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>
+        </a>
+      </nav>
+    </header>
+
+    <section class="intro">
+      <h1>Developer<br>Overview</h1>
+      <div class="chips">
+        <span class="chip">Verona, IT · GS Loft</span>
+        <span class="chip">Status: shipping ▾</span>
+      </div>
+    </section>
+
+    <section class="row">
+      <article class="card x">
+        <div class="card-top"><h2>On-Duty</h2><span class="tag" id="clock">09:00–18:00 CET</span></div>
+        <p class="small">Role: Developer<br>Team: <a href="https://github.com/GS-Loft-Dev" target="_blank" rel="noopener" class="ok">GS Loft</a></p>
+      </article>
+      <article class="card x">
+        <div class="card-top"><h2>Active Projects</h2></div>
+        <p class="small">Live: <b class="ok">1</b> | In dev: <b>1</b> | Next: 0<br>Stack: <span class="ok">Python</span> · TS · Next.js</p>
+      </article>
+    </section>
+
+    <section class="card wide x">
+      <div class="card-top"><h2>System Health</h2><a class="arrow" href="https://github.com/nicoogg?tab=repositories" target="_blank" rel="noopener" aria-label="Repositories">↗</a></div>
+      <div class="tiles">
+        <div class="tile"><span class="lbl">● Corvex agents</span><b>28</b></div>
+        <div class="tile"><span class="lbl">● Public repos</span><b>11</b></div>
+        <div class="tile"><span class="lbl">● Ship rate</span><b>99.4%</b></div>
+      </div>
+    </section>
+
+    <section class="card wide x">
+      <div class="card-top"><h2>Focus Balance (24h)</h2><a class="arrow" href="https://corvexdevelops.github.io/updates.html" target="_blank" rel="noopener" aria-label="Updates">↗</a></div>
+      <div class="balance">
+        <div><span>Security</span><b>+40%</b><i style="--w:80%"></i></div>
+        <div><span>Web apps</span><b>+35%</b><i class="on" style="--w:70%"></i></div>
+        <div><span>Automation</span><b>+25%</b><i style="--w:50%"></i></div>
+        <div><span>Coffee</span><b>∞</b><i style="--w:100%"></i></div>
+      </div>
+    </section>
+
+    <section class="card wide flow x">
+      <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><span id="zval">100%</span><button id="zout" aria-label="Zoom out">−</button></div>
+      <svg id="flow" viewBox="0 0 320 110" aria-label="Pipeline: idea, build, test, ship">
+        <g id="flowg">
+          <g stroke="#111" stroke-dasharray="3 3" fill="none">
+            <path d="M58 34 C80 34, 70 34, 88 36"/><path d="M58 34 C90 50, 70 70, 100 72"/><path d="M58 34 C90 60, 70 84, 100 86"/>
+            <path d="M138 72 C170 72, 180 80, 214 80"/><path d="M138 86 C170 86, 180 80, 214 80"/><path d="M112 36 C170 36, 180 78, 214 80"/>
+            <path d="M246 80 C262 80, 260 72, 274 72"/>
+          </g>
+          <rect x="22" y="28" width="36" height="12" fill="#111"/><rect x="88" y="31" width="24" height="9" fill="#111"/>
+          <rect x="100" y="66" width="38" height="12" fill="#111"/><rect x="100" y="81" width="38" height="11" fill="#111"/>
+          <rect x="214" y="74" width="32" height="12" fill="#111"/><rect x="274" y="66" width="32" height="12" fill="#111"/>
+          <g font-family="Geist Mono" font-size="6" fill="#777"><text x="22" y="22">idea</text><text x="100" y="60">build / test</text><text x="214" y="68">review</text><text x="274" y="60">ship</text></g>
+        </g>
+      </svg>
+    </section>
+  </aside>
+
+  <!-- ───────── map ───────── -->
+  <section class="map" id="map">
+    <canvas id="dots"></canvas>
+    <svg id="shapes" aria-hidden="true"></svg>
+    <div id="labels"></div>
+    <div class="top-right">
+      <a class="sq" href="https://github.com/nicoogg" target="_blank" rel="noopener" title="Say hi on GitHub">
+        <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M8.5 13.5c1.8 1.6 5.2 1.6 7 0"/></svg>
+      </a>
+      <a class="sq" href="https://corvexdevelops.github.io/updates.html" target="_blank" rel="noopener" title="Latest updates">
+        <svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>
+      </a>
+      <a class="sq avatar" href="https://github.com/nicoogg" target="_blank" rel="noopener" title="nicoogg"><img src="assets/avatar.png" alt="nicoogg"></a>
+    </div>
+    <article class="pop" id="pop" hidden></article>
+    <p class="hint">click a block ↘</p>
+  </section>
+
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

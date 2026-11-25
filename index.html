@@ -8,7 +8,15 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/style.css">
 </head>
-<body>
+<body class="booting">
+<div id="boot" aria-hidden="true">
+  <div class="boot-in">
+    <svg class="boot-mark" viewBox="0 0 32 32"><g stroke="#fff" stroke-width="3.2" stroke-linecap="square"><path d="M16 2v28M4 9l24 14M4 23l24-14"/></g></svg>
+    <pre id="bootlog"></pre>
+    <div class="boot-bar"><i id="bootbar"></i></div>
+    <p class="boot-skip">click to skip</p>
+  </div>
+</div>
 <main class="frame">
 
   <!-- ───────── left panel ───────── -->
@@ -35,7 +43,8 @@
       <h1><span class="dec">Developer</span><br><span class="dec">Overview</span><i class="caret"></i></h1>
       <div class="chips">
         <span class="chip">Verona, IT · GS Loft</span>
-        <span class="chip">Status: shipping ▾</span>
+        <span class="chip-wrap"><button class="chip" id="statusBtn" aria-expanded="false">Status: <span id="statusTxt">shipping</span> ▾</button>
+          <span class="menu" id="statusMenu" hidden></span></span>
       </div>
     </section>
 
@@ -46,14 +55,14 @@
       </article>
       <article class="card x">
         <div class="card-top"><h2>Active Projects</h2></div>
-        <p class="small">Live: <b class="ok">1</b> | In dev: <b>1</b> | Next: 0<br>Stack: <span class="ok">Python</span> · TS · Next.js</p>
+        <p class="small"><span class="hl" data-hl="wantdownload">Live: <b class="ok">1</b></span> | <span class="hl" data-hl="corvex">In dev: <b>1</b></span> | <span class="hl" data-hl="next">Next: 0</span><br>Stack: <span class="ok">Python</span> · TS · Next.js</p>
       </article>
     </section>
 
     <section class="card wide x">
       <div class="card-top"><h2>System Health</h2><a class="arrow" href="https://github.com/nicoogg?tab=repositories" target="_blank" rel="noopener" aria-label="Repositories">↗</a></div>
       <div class="tiles">
-        <div class="tile"><span class="lbl">● Corvex agents</span><b data-count="28">28</b></div>
+        <div class="tile" data-hl="corvex"><span class="lbl">● Corvex agents</span><b data-count="28">28</b></div>
         <div class="tile"><span class="lbl">● Public repos</span><b data-count="11">11</b></div>
         <div class="tile"><span class="lbl">● Ship rate</span><b data-count="99.4" data-dec="1" data-suf="%">99.4%</b></div>
       </div>
@@ -61,7 +70,7 @@
 
     <section class="card wide x">
       <div class="card-top"><h2>Focus Balance (24h)</h2><a class="arrow" href="https://corvexdevelops.github.io/updates.html" target="_blank" rel="noopener" aria-label="Updates">↗</a></div>
-      <div class="balance">
+      <div class="balance" id="balance">
         <div><span>Security</span><b>+40%</b><i style="--w:80%"></i></div>
         <div><span>Web apps</span><b>+35%</b><i class="on" style="--w:70%"></i></div>
         <div><span>Automation</span><b>+25%</b><i style="--w:50%"></i></div>
@@ -70,7 +79,7 @@
     </section>
 
     <section class="card wide flow x">
-      <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><span id="zval">100%</span><button id="zout" aria-label="Zoom out">−</button></div>
+      <div class="zoom"><span class="drag">drag ✥</span><button id="zin" aria-label="Zoom in">+</button><span id="zval">100%</span><button id="zout" aria-label="Zoom out">−</button></div>
       <svg id="flow" viewBox="0 0 320 110" aria-label="Pipeline: idea, build, test, ship">
         <g id="flowg">
           <g class="wires" stroke="#111" stroke-dasharray="3 3" fill="none">
@@ -95,20 +104,25 @@
 
   <!-- ───────── map ───────── -->
   <section class="map" id="map">
-    <canvas id="dots"></canvas>
-    <svg id="shapes" aria-hidden="true"></svg>
-    <div id="labels"></div>
+    <div class="world" id="world">
+      <canvas id="dots"></canvas>
+      <svg id="shapes" aria-hidden="true"></svg>
+      <div id="labels"></div>
+    </div>
+    <div class="xh" id="xh" hidden><i class="h"></i><i class="v"></i><span id="xhTxt"></span></div>
     <div class="top-right">
       <a class="sq" href="https://github.com/nicoogg" target="_blank" rel="noopener" title="Say hi on GitHub">
         <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M8.5 13.5c1.8 1.6 5.2 1.6 7 0"/></svg>
       </a>
-      <a class="sq" href="https://corvexdevelops.github.io/updates.html" target="_blank" rel="noopener" title="Latest updates">
-        <svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>
-      </a>
+      <span class="bell-wrap"><button class="sq" id="bell" title="Latest activity" aria-expanded="false">
+        <svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg><b class="badge" id="badge" hidden></b>
+      </button>
+      <div class="notes" id="notes" hidden><header><span>Latest activity</span><a href="https://github.com/nicoogg" target="_blank" rel="noopener">GitHub ↗</a></header><div id="notesList"><p class="empty">loading…</p></div></div></span>
       <a class="sq avatar" href="https://github.com/nicoogg" target="_blank" rel="noopener" title="nicoogg"><img src="assets/avatar.png" alt="nicoogg"></a>
     </div>
     <article class="pop" id="pop" hidden></article>
-    <p class="hint">click a block ↘</p>
+    <p class="hint">click a block · keys 1–5 · ← →</p>
+    <div class="ticker"><span class="tk-l"><i></i>live · github</span><div class="tk-track"><div class="tk-run" id="ticker"><span>fetching activity…</span></div></div></div>
   </section>
 
 </main>

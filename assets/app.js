@@ -81,6 +81,7 @@
     if (stacked) { S = Math.min(aw / 780, ah / 700); OX = aw / 2 - 535 * S; }   // phones: crop the empty sides
     else { S = Math.min(aw / 1000, ah / 700) * .98; OX = left + (aw - 1000 * S) / 2; }
     OY = (ah - 700 * S) / 2;
+    map.style.setProperty("--pl", left + "px");
   }
   const toScreen = (x, y) => [OX + x * S, OY + y * S];
   const toModel = (x, y) => [(x - OX) / S, (y - OY) / S];
@@ -168,9 +169,11 @@
     twinkles = Array.from({ length: 260 }, () => [Math.floor(rnd() * W / cell) * cell + cell / 2, Math.floor(rnd() * H / cell) * cell + cell / 2, rnd() * 6.28, 1 + rnd() * 1.2]);
   }
 
-  let twinkles = [], boot = 0;
+  let twinkles = [], boot = 0, ripples = [];
+  const mouse = { x: 0, y: 0, in: false };
   function frame(t) {
     if (!boot) boot = t;
+    t = Math.max(t, boot);  // a rAF timestamp can be a little older than performance.now()
     const [cx, cy] = toScreen(AVATAR.x, AVATAR.y), maxR = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy));
     const intro = reduce ? 1 : Math.min(1, (t - boot) / 1700), r = ease(intro) * maxR;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -181,6 +184,22 @@
     } else ctx.drawImage(base, 0, 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (intro < 1) { ctx.strokeStyle = `rgba(255,255,255,${(1 - intro) * .8})`; ctx.lineWidth = 1.5; ctx.setLineDash([2, 4]); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+    // spotlight: dots under the cursor light up
+    if (mouse.in) {
+      ctx.save(); ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 120, 0, 7); ctx.clip();
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .85; ctx.drawImage(base, 0, 0);
+      ctx.restore(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.setLineDash([1, 4]); ctx.beginPath(); ctx.arc(mouse.x, mouse.y, 120, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // click ripples
+    ripples = ripples.filter(rp => t - rp.t < 1100 && t >= rp.t);
+    for (const rp of ripples) {
+      const q = (t - rp.t) / 1100, rr = ease(q) * 220;
+      ctx.strokeStyle = `rgba(255,255,255,${(1 - q) * .8})`; ctx.lineWidth = 1.2; ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.arc(rp.x, rp.y, Math.max(0, rr), 0, 7); ctx.stroke();
+      ctx.beginPath(); ctx.arc(rp.x, rp.y, Math.max(0, rr * .55), 0, 7); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = `rgba(255,255,255,${1 - q})`; ctx.fillRect(rp.x - 2, rp.y - 2, 4, 4);
+    }
     if (reduce) return;
     // radar pulse from the avatar every few seconds
     const pr = ((t - boot) % 4200) / 4200;
@@ -283,49 +302,182 @@
   function close() { current = null; pop.hidden = true; document.querySelectorAll("[data-id].on").forEach(e => e.classList.remove("on")); }
   map.addEventListener("click", e => {
     if (e.target.closest(".close")) return close();
+    if (e.target.closest(".top-right, .ticker")) return;
     const hit = e.target.closest("[data-id]");
     if (hit) open(hit.dataset.id);
-    else if (!e.target.closest(".pop, .top-right")) close();
+    else if (!e.target.closest(".pop")) { close(); if (!reduce) ripples.push({ x: mouse.x, y: mouse.y, t: performance.now() }); }
   });
-  addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+
+  /* ───────── map: cursor, crosshair, parallax, keys ───────── */
+  const world = document.getElementById("world"), xh = document.getElementById("xh"), xhTxt = document.getElementById("xhTxt");
+  const order = PROJECTS.map(p => p.id);
+  map.addEventListener("mousemove", e => {
+    const cr = canvas.getBoundingClientRect(), mr = map.getBoundingClientRect();
+    mouse.x = e.clientX - cr.left; mouse.y = e.clientY - cr.top; mouse.in = !e.target.closest(".top-right, .pop, .ticker, .notes");
+    const lx = e.clientX - mr.left, ly = e.clientY - mr.top;
+    xh.hidden = !mouse.in; xh.style.setProperty("--x", lx + "px"); xh.style.setProperty("--y", ly + "px");
+    const [mx, my] = toModel(mouse.x, mouse.y);
+    let near = null, nd = 1e9; PROJECTS.forEach(p => { const d = Math.hypot(p.x - mx, p.y - my); if (d < nd) { nd = d; near = p; } });
+    xhTxt.textContent = `x ${String(Math.round(mx)).padStart(4, "0")} · y ${String(Math.round(my)).padStart(4, "0")} → №${near.no} ${Math.round(nd)}m`;
+    if (!reduce && !STACKED) { const k = 12; world.style.transform = `translate(${(-(lx / mr.width - .5) * k).toFixed(1)}px, ${(-(ly / mr.height - .5) * k).toFixed(1)}px)`; }
+  }, { passive: true });
+  map.addEventListener("mouseleave", () => { mouse.in = false; xh.hidden = true; world.style.transform = ""; });
+  addEventListener("keydown", e => {
+    if (e.target.closest && e.target.closest("input, textarea")) return;
+    if (e.key === "Escape") { close(); closeMenus(); return; }
+    const n = parseInt(e.key, 10);
+    if (n >= 1 && n <= PROJECTS.length) return open(order[n - 1]);
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      const i = current ? order.indexOf(current) : -1, d = e.key === "ArrowRight" ? 1 : -1;
+      open(order[(i + d + order.length) % order.length]);
+    }
+  });
+  function highlight(id, on) {
+    document.querySelectorAll(`[data-id="${id}"]`).forEach(el => el.classList.toggle("on", on || current === id));
+  }
 
   /* ───────── panel widgets ───────── */
   const clock = document.getElementById("clock");
   function tick() {
-    const now = new Date();
-    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit", weekday: "short", hourCycle: "h23" }).formatToParts(now).map(p => [p.type, p.value]));
-    const h = +parts.hour, wk = !["Sat", "Sun"].includes(parts.weekday);
-    const on = wk && h >= 9 && h < 18;
-    clock.innerHTML = `<i class="live${on ? "" : " off"}"></i>${parts.hour}:${parts.minute} CET · ${on ? "on duty" : "off"}`;
+    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit", second: "2-digit", weekday: "short", hourCycle: "h23" }).formatToParts(new Date()).map(p => [p.type, p.value]));
+    const h = +parts.hour, on = !["Sat", "Sun"].includes(parts.weekday) && h >= 9 && h < 18;
+    clock.innerHTML = `<i class="live${on ? "" : " off"}"></i>${parts.hour}:${parts.minute}:${parts.second} CET · ${on ? "on duty" : "off"}`;
   }
-  tick(); setInterval(tick, 20000);
+  tick(); setInterval(tick, 1000);
 
-  let z = 1; const fg = document.getElementById("flowg"), zv = document.getElementById("zval");
-  const setZ = v => { z = Math.max(.6, Math.min(1.8, v)); fg.style.transform = `scale(${z})`; zv.textContent = Math.round(z * 100) + "%"; };
+  // flow diagram: zoom with the buttons or the wheel, drag to pan
+  let z = 1, px = 0, py = 0; const flow = document.getElementById("flow"), fg = document.getElementById("flowg"), zv = document.getElementById("zval");
+  const applyFlow = () => { fg.style.transform = `translate(${px}px, ${py}px) scale(${z})`; zv.textContent = Math.round(z * 100) + "%"; };
+  const setZ = v => { z = Math.max(.6, Math.min(2.2, v)); applyFlow(); };
   document.getElementById("zin").onclick = () => setZ(z + .2);
   document.getElementById("zout").onclick = () => setZ(z - .2);
+  flow.addEventListener("wheel", e => { e.preventDefault(); setZ(z - Math.sign(e.deltaY) * .1); }, { passive: false });
+  flow.addEventListener("pointerdown", e => {
+    const k = 320 / flow.getBoundingClientRect().width, sx = e.clientX, sy = e.clientY, bx = px, by = py;
+    flow.setPointerCapture(e.pointerId); flow.classList.add("dragging");
+    const mv = ev => { px = Math.max(-160, Math.min(160, bx + (ev.clientX - sx) * k)); py = Math.max(-60, Math.min(60, by + (ev.clientY - sy) * k)); applyFlow(); };
+    flow.addEventListener("pointermove", mv);
+    flow.addEventListener("pointerup", () => { flow.classList.remove("dragging"); flow.removeEventListener("pointermove", mv); }, { once: true });
+  });
+  flow.addEventListener("dblclick", () => { z = 1; px = py = 0; applyFlow(); });
 
-  [...panel.children].forEach((el, i) => el.style.setProperty("--i", i));
-  panel.querySelectorAll(".row > .card").forEach((el, i) => el.style.setProperty("--i", 2 + i));
-  panel.querySelectorAll(".balance i").forEach((el, i) => el.style.setProperty("--k", i));
-  panel.querySelectorAll(".dec").forEach((el, i) => { const t = el.textContent; el.style.minWidth = el.getBoundingClientRect().width + "px"; setTimeout(() => scramble(el, t, 900), 150 + i * 220); });
-  panel.querySelectorAll("[data-count]").forEach((el, i) => {
+  // status menu: jump to any project on the map
+  const statusBtn = document.getElementById("statusBtn"), statusMenu = document.getElementById("statusMenu"), statusTxt = document.getElementById("statusTxt");
+  statusMenu.innerHTML = PROJECTS.map(p => `<button data-go="${p.id}"><span>№${p.no} ${p.name}</span><small>${p.status}</small></button>`).join("");
+  function closeMenus() { statusMenu.hidden = true; statusBtn.setAttribute("aria-expanded", "false"); notes.hidden = true; bell.setAttribute("aria-expanded", "false"); }
+  statusBtn.onclick = e => { e.stopPropagation(); const o = statusMenu.hidden; closeMenus(); statusMenu.hidden = !o; statusBtn.setAttribute("aria-expanded", String(o)); };
+  statusMenu.onclick = e => {
+    const b = e.target.closest("[data-go]"); if (!b) return;
+    const p = PROJECTS.find(q => q.id === b.dataset.go); closeMenus();
+    scramble(statusTxt, p.status.toLowerCase(), 420);
+    if (STACKED) map.scrollIntoView({ behavior: "smooth" });
+    open(p.id);
+  };
+  document.addEventListener("click", e => { if (!e.target.closest(".chip-wrap, .bell-wrap")) closeMenus(); });
+
+  // panel items that point at a project light it up on the map
+  panel.querySelectorAll("[data-hl]").forEach(el => {
+    const id = el.dataset.hl;
+    el.addEventListener("mouseenter", () => highlight(id, true));
+    el.addEventListener("mouseleave", () => highlight(id, false));
+    el.addEventListener("click", () => { if (STACKED) map.scrollIntoView({ behavior: "smooth" }); open(id); });
+  });
+
+  // count-up, replayed on hover
+  function countUp(el, delay = 0) {
     if (reduce) return;
     const end = +el.dataset.count, dec = +(el.dataset.dec || 0), suf = el.dataset.suf || "";
     el.textContent = (0).toFixed(dec) + suf;
-    setTimeout(() => { const t0 = performance.now(); const f = now => { const q = Math.min(1, (now - t0) / 1100); el.textContent = (end * ease(q)).toFixed(dec) + suf; if (q < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }, 600 + i * 120);
-  });
+    setTimeout(() => { const t0 = performance.now(); const f = now => { const q = Math.min(1, (now - t0) / 1100); el.textContent = (end * ease(q)).toFixed(dec) + suf; if (q < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }, delay);
+  }
+  panel.querySelectorAll(".tile").forEach(t => t.addEventListener("mouseenter", () => { const b = t.querySelector("[data-count]"); if (b && !b._busy) { b._busy = 1; countUp(b); setTimeout(() => b._busy = 0, 1200); } }));
+
+  // focus balance drifts a little, like a live 24h feed
+  const FOCUS = [40, 35, 25];
+  function drift() {
+    const rows = document.querySelectorAll("#balance > div");
+    const next = FOCUS.map(v => Math.max(10, v + (Math.random() * 10 - 5))), sum = next.reduce((a, b) => a + b, 0);
+    next.forEach((v, i) => {
+      const pct = Math.round(v / sum * 100), b = rows[i].querySelector("b"), old = parseInt(b.textContent.replace(/\D/g, ""), 10);
+      b.className = pct > old ? "up" : pct < old ? "down" : "";
+      b.textContent = "+" + pct + "%"; rows[i].querySelector("i").style.setProperty("--w", Math.min(100, pct * 2) + "%");
+      FOCUS[i] = v;
+    });
+  }
+
   // soft light following the mouse over the cards, as in the Corvex dashboard
   panel.addEventListener("mousemove", e => {
     const c = e.target.closest(".card"); if (!c) return;
     const r = c.getBoundingClientRect(); c.style.setProperty("--mx", (e.clientX - r.left) + "px"); c.style.setProperty("--my", (e.clientY - r.top) + "px");
   }, { passive: true });
 
-  /* ───────── boot ───────── */
+  /* ───────── live GitHub activity: ticker + bell ───────── */
+  const tickerEl = document.getElementById("ticker"), bell = document.getElementById("bell"), notes = document.getElementById("notes"), notesList = document.getElementById("notesList"), badge = document.getElementById("badge");
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const ago = d => { const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 60 ? m + "m ago" : m < 1440 ? Math.round(m / 60) + "h ago" : Math.round(m / 1440) + "d ago"; };
+  function describe(e) {
+    const r = e.repo.name, pl = e.payload || {};
+    switch (e.type) {
+      case "PushEvent": { const c = (pl.commits || [])[0]; return ["push", c ? c.message.split("\n")[0] : `${pl.size || pl.distinct_size || "new"} commit${(pl.size || 2) > 1 ? "s" : ""} to ${(pl.ref || "main").replace("refs/heads/", "")}`]; }
+      case "CreateEvent": return ["create", `${pl.ref_type}${pl.ref ? " " + pl.ref : ""}`];
+      case "WatchEvent": return ["star", "starred"];
+      case "ForkEvent": return ["fork", "forked"];
+      case "PublicEvent": return ["open", "made public"];
+      case "ReleaseEvent": return ["release", (pl.release && pl.release.tag_name) || "new release"];
+      case "PullRequestEvent": return ["pr", `${pl.action} pull request`];
+      case "IssuesEvent": return ["issue", `${pl.action} issue`];
+      default: return [e.type.replace("Event", "").toLowerCase(), "activity"];
+    }
+  }
+  function fillActivity(list) {
+    if (!list.length) list = [{ type: "PublicEvent", repo: { name: "nicoogg/nicoogg.github.io" }, created_at: new Date().toISOString(), payload: {} }];
+    const items = list.slice(0, 14).map(e => { const [k, msg] = describe(e); return { k, msg, repo: e.repo.name, at: e.created_at }; });
+    const run = items.map(i => `<a href="https://github.com/${esc(i.repo)}" target="_blank" rel="noopener"><b>${esc(i.k)}</b> → ${esc(i.repo)} · ${esc(i.msg)}<small>${ago(i.at)}</small></a>`).join("");
+    tickerEl.innerHTML = run + run;
+    tickerEl.style.setProperty("--dur", Math.max(30, items.length * 7) + "s");
+    notesList.innerHTML = items.map((i, j) => `<a class="note" style="--j:${j}" href="https://github.com/${esc(i.repo)}" target="_blank" rel="noopener"><i></i><span><b>${esc(i.k)}</b> · ${esc(i.repo)}<br>${esc(i.msg)}<small>${ago(i.at)}</small></span></a>`).join("");
+    const seen = +localStorage.getItem("nicoogg-seen") || 0, fresh = items.filter(i => new Date(i.at) > seen && Date.now() - new Date(i.at) < 7 * 864e5).length;
+    if (fresh) { badge.textContent = fresh > 9 ? "9+" : fresh; badge.hidden = false; }
+  }
+  fetch("https://api.github.com/users/nicoogg/events/public?per_page=30").then(r => r.ok ? r.json() : []).catch(() => []).then(fillActivity);
+  bell.onclick = e => {
+    e.stopPropagation(); const o = notes.hidden; closeMenus(); notes.hidden = !o; bell.setAttribute("aria-expanded", String(o));
+    if (o) { badge.hidden = true; localStorage.setItem("nicoogg-seen", Date.now()); notesList.querySelectorAll(".note").forEach(n => { n.style.animation = "none"; void n.offsetWidth; n.style.animation = ""; }); }
+  };
+
+  /* ───────── boot screen ───────── */
+  const bootEl = document.getElementById("boot"), bootLog = document.getElementById("bootlog"), bootBar = document.getElementById("bootbar");
+  const LINES = [["> nicoogg.os", " v2.0"], ["> mounting map", " ......... <em>ok</em>"], ["> linking projects", " ..... <b>" + PROJECTS.length + "</b>"], ["> fetching activity", " ..... <em>live</em>"], ["> operator", " online"]];
+  const bootDone = new Promise(res => {
+    let finished = false;
+    const finish = () => { if (finished) return; finished = true; bootBar.style.width = "100%"; bootEl.classList.add("done"); document.body.classList.remove("booting"); setTimeout(() => bootEl.remove(), 800); res(); };
+    if (reduce || sessionStorage.getItem("nicoogg-booted")) { bootEl.remove(); document.body.classList.remove("booting"); return res(); }
+    sessionStorage.setItem("nicoogg-booted", "1");
+    bootEl.addEventListener("click", finish);
+    LINES.forEach(([a, b], i) => setTimeout(() => {
+      if (finished) return;
+      const row = document.createElement("div"); bootLog.appendChild(row);
+      const span = document.createElement("span"); row.appendChild(span);
+      scramble(span, a, 220); setTimeout(() => row.insertAdjacentHTML("beforeend", b), 230);
+      bootBar.style.width = ((i + 1) / LINES.length * 100) + "%";
+    }, 120 + i * 260));
+    setTimeout(finish, 120 + LINES.length * 260 + 350);
+  });
+
+  bootDone.then(() => {
+    [...panel.children].forEach((el, i) => el.style.setProperty("--i", i));
+    panel.querySelectorAll(".dec").forEach((el, i) => { const t = el.textContent; el.style.minWidth = el.getBoundingClientRect().width + "px"; setTimeout(() => scramble(el, t, 900), 150 + i * 220); });
+    panel.querySelectorAll("[data-count]").forEach((el, i) => countUp(el, 600 + i * 120));
+    if (!reduce) setInterval(drift, 3500);
+  });
+  panel.querySelectorAll(".row > .card").forEach((el, i) => el.style.setProperty("--i", 2 + i));
+  panel.querySelectorAll(".balance i").forEach((el, i) => el.style.setProperty("--k", i));
+
+  /* ───────── start ───────── */
   function render() { layout(); drawBase(); drawShapes(); frame(performance.now()); if (current) { const id = current; open(id); } }
   let rt; addEventListener("resize", () => { if (!boot) return; clearTimeout(rt); rt = setTimeout(render, 120); });
   // the map intro plays when the map comes into view (on phones it sits below the panel)
-  loadAvatar().then(() => {
+  Promise.all([loadAvatar(), bootDone]).then(() => {
     const go = () => { render(); if (!reduce) requestAnimationFrame(loop); };
     if (reduce || !("IntersectionObserver" in window)) return go();
     const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); go(); } }, { threshold: .25 });

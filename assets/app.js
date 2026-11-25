@@ -16,10 +16,10 @@
       status: "Work · developer", color: "#f5a524",
       text: "My day job. Internal portals, data tools, bots and integrations that keep the company running.",
       links: [["GS-Loft-Dev", "https://github.com/GS-Loft-Dev"]] },
-    { id: "next", no: "04", name: "next", x: 640, y: 560, size: 130, rot: 315, lab: [520, 625],
-      status: "Soon", color: "#999",
-      text: "Something new is always on the bench. Follow the GitHub profile to see it land.",
-      links: [["Follow", "https://github.com/nicoogg"]] },
+    { id: "corvexai", no: "04", name: "corvexai", x: 640, y: 560, size: 130, rot: 315, lab: [520, 625],
+      status: "In development", color: "#3ddc84",
+      text: "Our own AI model, built in-house for one job: security. 4B parameters, runs on your machine on 127.0.0.1, no question ever leaves. It powers CORVUS and the ORACLE code audit inside Corvex.",
+      links: [["corvexai page", "https://corvexdevelops.github.io/corvexai.html"], ["Open source", "https://github.com/CorvexDevelops"]] },
     { id: "you", no: "05", name: "your idea", x: 860, y: 360, size: 130, rot: 225, ghost: true, lab: [870, 470], labM: [790, 480],
       status: "Open slot", color: "#fff",
       text: "Have a project in mind? Get in touch on GitHub and let's build it.",
@@ -325,6 +325,8 @@
   addEventListener("keydown", e => {
     if (e.target.closest && e.target.closest("input, textarea")) return;
     if (e.key === "Escape") { close(); closeMenus(); return; }
+    const t = document.getElementById("term");
+    if (t && !t.classList.contains("min")) return;  // the open terminal takes the keyboard
     const n = parseInt(e.key, 10);
     if (n >= 1 && n <= PROJECTS.length) return open(order[n - 1]);
     if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
@@ -467,7 +469,7 @@
 
   bootDone.then(() => {
     [...panel.children].forEach((el, i) => el.style.setProperty("--i", i));
-    panel.querySelectorAll(".dec").forEach((el, i) => { const t = el.textContent; el.style.minWidth = el.getBoundingClientRect().width + "px"; setTimeout(() => scramble(el, t, 900), 150 + i * 220); });
+    panel.querySelectorAll(".dec").forEach((el, i) => { const t = el.textContent; el.style.minWidth = el.getBoundingClientRect().width + "px"; setTimeout(() => scramble(el, t, 900), 150 + i * 220); setTimeout(() => { el.style.minWidth = ""; }, 1400 + i * 220); });
     panel.querySelectorAll("[data-count]").forEach((el, i) => countUp(el, 600 + i * 120));
     if (!reduce) setInterval(drift, 3500);
   });

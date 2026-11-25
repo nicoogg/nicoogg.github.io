@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>nicoogg · Developer Overview</title>
 <meta name="description" content="nicoogg: developer at GS Loft, building Corvex and wantdownload.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -55,7 +55,7 @@
       </article>
       <article class="card x">
         <div class="card-top"><h2>Active Projects</h2></div>
-        <p class="small"><span class="hl" data-hl="wantdownload">Live: <b class="ok">1</b></span> | <span class="hl" data-hl="corvex">In dev: <b>1</b></span> | <span class="hl" data-hl="next">Next: 0</span><br>Stack: <span class="ok">Python</span> · TS · Next.js</p>
+        <p class="small"><span class="hl" data-hl="wantdownload">Live: <b class="ok">1</b></span> | <span class="hl" data-hl="corvex">In dev: <b>2</b></span> | <span class="hl" data-hl="corvexai">AI: <b class="ok">corvexai</b></span><br>Stack: <span class="ok">Python</span> · TS · Next.js</p>
       </article>
     </section>
 
@@ -64,7 +64,7 @@
       <div class="tiles">
         <div class="tile" data-hl="corvex"><span class="lbl">● Corvex agents</span><b data-count="28">28</b></div>
         <div class="tile"><span class="lbl">● Public repos</span><b data-count="11">11</b></div>
-        <div class="tile"><span class="lbl">● Ship rate</span><b data-count="99.4" data-dec="1" data-suf="%">99.4%</b></div>
+        <div class="tile" data-hl="corvexai"><span class="lbl">● corvexai params</span><b data-count="4" data-suf="B">4B</b></div>
       </div>
     </section>
 
@@ -126,19 +126,22 @@
     <section class="term" id="term" aria-label="Terminal">
       <header class="t-bar">
         <span class="t-dots"><button id="tClose" aria-label="Minimize"></button><button id="tMin" aria-label="Minimize"></button><button id="tMax" aria-label="Maximize"></button></span>
-        <span class="t-title">nicoogg@verona: ~ — portfolio-sh</span>
+        <span class="t-title">nicoogg@dash: ~ — portfolio-sh</span>
         <span class="t-key">` / ⌘K</span>
       </header>
       <div class="t-body" id="tBody">
         <div id="tOut"></div>
         <label class="t-row"><span id="tPrompt"></span><span class="t-field"><span class="t-ghost" id="tGhost"></span><input id="tIn" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type a command"></span></label>
       </div>
+      <nav class="t-keys" id="tKeys" aria-label="Terminal keys">
+        <button data-k="Tab">tab</button><button data-k="ArrowUp">↑</button><button data-k="ArrowDown">↓</button><button data-k="/">/</button><button data-k="-">-</button><button data-k="ctrl-c">^C</button><button data-k="clear">clear</button><button data-k="enter" class="go">⏎</button>
+      </nav>
       <nav class="t-chips" id="tChips">
-        <button data-cmd="help">help</button><button data-cmd="neofetch">neofetch</button><button data-cmd="projects">projects</button>
-        <button data-cmd="git log">git log</button><button data-cmd="scan">scan</button><button data-cmd="matrix">matrix</button>
+        <button data-cmd="help">help</button><button data-cmd="neofetch">neofetch</button><button data-cmd="projects">projects</button><button data-cmd="corvexai">corvexai</button>
+        <button data-cmd="git log">git log</button><button data-cmd="scan">scan</button><button data-cmd="top">top</button><button data-cmd="tree">tree</button><button data-cmd="matrix">matrix</button>
       </nav>
     </section>
-    <p class="hint">click a block · keys 1–5 · ← → · ` terminal</p>
+    <p class="hint">just type · click a block · ` hides the terminal (then keys 1–5 · ← →)</p>
     <div class="ticker"><span class="tk-l"><i></i>live · github</span><div class="tk-track"><div class="tk-run" id="ticker"><span>fetching activity…</span></div></div></div>
   </section>
 

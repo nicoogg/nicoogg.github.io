@@ -6,7 +6,7 @@
   const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const $ = id => document.getElementById(id);
   const term = $("term"), out = $("tOut"), input = $("tIn"), promptEl = $("tPrompt"), ghost = $("tGhost"), body = $("tBody");
-  const USER = "nicoogg", HOST = "verona";
+  const USER = "nicoogg", HOST = "dash";
   const BORN = new Date("2026-11-25T12:00:00Z");
 
   /* ───────── a tiny file system ───────── */
@@ -17,7 +17,8 @@
       "",
       "I build web apps, internal tools and automations by day",
       "and security software by night.",
-      "Day job: developer at GS Loft. Side quest: corvex.",
+      "Day job: developer at GS Loft. Side quest: corvex and corvexai,",
+      "our own security AI model that runs locally.",
       "",
       "try: <c>ls projects</c>  <c>cat projects/corvex.md</c>  <c>neofetch</c>"] },
     "~/contact.txt": { type: "file", body: () => [
@@ -30,10 +31,10 @@
       "web ......... Next.js · React · Node · static sites that load fast",
       "infra ....... Vercel · GitHub Actions · Supabase · Docker",
       "security .... SAST, secrets, CVE matching, local AI (corvexai)"] },
-    "~/projects": { type: "dir", children: ["corvex.md", "wantdownload.md", "gsloft.md", "next.md", "your-idea.md"] },
+    "~/projects": { type: "dir", children: ["corvex.md", "corvexai.md", "wantdownload.md", "gsloft.md", "your-idea.md"] },
     "~/.secret": { type: "file", body: () => ["you found it.", "the real secret: ship small, ship often. ☕", "(type <c>matrix</c>)"] },
   };
-  const projFile = { "corvex.md": "corvex", "wantdownload.md": "wantdownload", "gsloft.md": "gsloft", "next.md": "next", "your-idea.md": "you" };
+  const projFile = { "corvex.md": "corvex", "wantdownload.md": "wantdownload", "gsloft.md": "gsloft", "corvexai.md": "corvexai", "your-idea.md": "you" };
   Object.entries(projFile).forEach(([f, id]) => {
     FS["~/projects/" + f] = { type: "file", project: id, body: () => {
       const p = N().projects.find(q => q.id === id);
@@ -81,10 +82,15 @@
     const flags = args.filter(a => a.startsWith("-")), path = resolve(args.find(a => !a.startsWith("-")) || cwd), node = FS[path];
     if (!node) return line(`ls: ${esc(path)}: no such file or directory`, "t-err");
     if (node.type === "file") return line(esc(path.split("/").pop()));
-    const all = flags.some(f => f.includes("a"));
+    const all = flags.some(f => f.includes("a")), long = flags.some(f => f.includes("l"));
     const items = node.children.filter(n => all || !n.startsWith("."));
+    if (long) {
+      line(`total ${items.length}`);
+      return stream(items.map((n, i) => { const full = path + "/" + n, d = FS[full] && FS[full].type === "dir";
+        const size = d ? 4096 : (FS[full].body().join("\n").length); return `${d ? "drwxr-xr-x" : "-rw-r--r--"}  nicoogg  ${String(size).padStart(5)}  Nov 25  <button class="t-cmd ${d ? "t-dir" : ""}" data-cmd="${d ? "cd " + n : "cat " + (path === cwd ? n : full)}">${esc(n)}${d ? "/" : ""}</button>`; }), 18);
+    }
     line(items.map(n => { const full = path + "/" + n, d = FS[full] && FS[full].type === "dir"; return `<button class="t-cmd ${d ? "t-dir" : ""}" data-cmd="${d ? "cd " + n : "cat " + (path === cwd ? n : full)}">${esc(n)}${d ? "/" : ""}</button>`; }).join("   "));
-  }, "list files (-a for hidden)");
+  }, "list files (-a hidden, -l details)");
   cmd("cd", args => {
     const path = resolve(args[0] || "~"), node = FS[path];
     if (!node) return line(`cd: ${esc(args[0])}: no such directory`, "t-err");
@@ -129,8 +135,8 @@
   }, "scan the map");
   cmd("neofetch fetch", async () => {
     const up = Math.max(0, Date.now() - BORN), d = Math.floor(up / 864e5), h = Math.floor(up / 36e5) % 24;
-    const art = ["      ██      ", "  ██  ██  ██  ", "    ██████    ", "  ██  ██  ██  ", "      ██      ", "              ", "              ", "              "];
-    const info = [`<b>${USER}</b>@<b>${HOST}</b>`, "---------------", `<span class="t-k">os</span>       nicoogg.os 2.0`, `<span class="t-k">host</span>     GS Loft`, `<span class="t-k">projects</span> ${N().projects.length} (1 live, 1 in dev)`,
+    const art = ["      ██      ", "  ██  ██  ██  ", "    ██████    ", "  ██  ██  ██  ", "      ██      ", "              ", "              ", "              ", "              "];
+    const info = [`<b>${USER}</b>@<b>${HOST}</b>`, "---------------", `<span class="t-k">os</span>       nicoogg.os 2.0`, `<span class="t-k">host</span>     GS Loft`, `<span class="t-k">projects</span> ${N().projects.length} (1 live, 2 in dev)`, `<span class="t-k">ai</span>       corvexai 4B · local`,
       `<span class="t-k">uptime</span>   ${d}d ${h}h`, `<span class="t-k">shell</span>    portfolio-sh`, `<span class="t-k">stack</span>    python · ts · next.js`];
     await stream(art.map((a, i) => `<span class="t-art">${a}</span>  ${info[i] || ""}`), 30);
     line(["#000", "#444", "#888", "#ccc", "#fff", "#3ddc84", "#f5a524", "#6f9bff"].map(c => `<i class="t-sw" style="background:${c}"></i>`).join(""));
@@ -154,6 +160,68 @@
   cmd("banner figlet", () => stream([
     "█▄ █ █ █▀▀ █▀█ █▀█ █▀▀ █▀▀",
     "█ ▀█ █ █▄▄ █▄█ █▄█ █▄█ █▄█"].map(l => `<span class="t-art">${l}</span>`), 60), "big letters");
+  cmd("corvexai ai", async args => {
+    const f = args[0] || "";
+    if (f === "--bench" || f === "bench") {
+      line("<b>corvexai</b> · measured by the Corvex team on cases it never saw in training", "");
+      const rows = [["issues found on its own in the code", 66], ["issues found with the question sheet", 96], ["defenses recognised, exact line", 100], ["reported issues verified correctly", 83]];
+      for (const [label, v] of rows) {
+        const el = line("");
+        for (let k = 0; k <= v; k += 4) { el.innerHTML = `  ${label.padEnd(38, ".")} <span class="t-ok">${"█".repeat(Math.round(k / 5)).padEnd(20, "░")}</span> ${String(Math.min(k, v)).padStart(3)}%`; await sleep(14); }
+        el.innerHTML = `  ${label.padEnd(38, ".")} <span class="t-ok">${"█".repeat(Math.round(v / 5)).padEnd(20, "░")}</span> ${String(v).padStart(3)}%`;
+      }
+      return stream(["", "<span class='t-dim'>CORVUS, the assistant on corvexai: 37 of 39 security questions right, 18 of 20 never seen before.</span>",
+        "<span class='t-dim'>source: <a href='https://corvexdevelops.github.io/corvexai.html' target='_blank' rel='noopener'>corvexdevelops.github.io/corvexai</a></span>"]);
+    }
+    if (f === "--oracle" || f === "oracle") {
+      const steps = ["the right questions · a yes/no sheet for every function that handles requests", "candidates · suspicious points derived from the answers",
+        "exact line · a made-up quote discards the candidate", "tries to disprove it · a second, independent check", "evidence · only what holds remains, with the fix"];
+      line("<b>ORACLE</b> · the AI code audit. it doesn't even trust itself:");
+      for (let i = 0; i < steps.length; i++) { await sleep(260); line(`  <span class="t-ok">0${i + 1}</span> ${steps[i]}`); }
+      return;
+    }
+    N().ping("corvexai");
+    await stream([
+      "<b>corvexai</b>  <span class='t-dim'>[in development · ships with Corvex]</span>", "",
+      "  job .......... cybersecurity: verifying issues, finding missing checks, recognising defenses",
+      "  built by ..... the Corvex team, trained in-house on an analyst's real tasks",
+      "  size ......... 4 billion parameters · 2.9 GB",
+      "  memory ....... 3–4 GB, runs on a laptop too",
+      "  runs on ...... your machine, only on 127.0.0.1",
+      "  integrity .... SHA-256 fingerprint verified on start",
+      "  third parties  none. no question ever leaves.",
+      "  powers ....... CORVUS (the assistant) and ORACLE (the AI code audit)", "",
+      "more: <c>corvexai --bench</c>  <c>corvexai --oracle</c>  <c>open corvexai</c>"], 22);
+  }, "our own security AI model (--bench, --oracle)");
+  cmd("top htop", async () => {
+    const procs = [["corvex-agents", 28, 41], ["corvexai (4B)", 8, 57], ["wantdownload", 2, 12], ["gsloft-portal", 4, 9], ["portfolio-sh", 1, 3], ["coffee", 1, 99]];
+    const head = line(""), rows = procs.map(() => line(""));
+    const t0 = Date.now();
+    line("<span class='t-dim'>live for 6s · press any key to keep typing</span>");
+    for (let f = 0; f < 15 && Date.now() - t0 < 6200; f++) {
+      const load = (1 + Math.random() * 1.6).toFixed(2);
+      head.innerHTML = `<b>top</b> - ${new Date().toLocaleTimeString("en-GB")} up ${Math.floor((Date.now() - BORN) / 36e5)}h · load ${load} · tasks ${procs.length}`;
+      procs.forEach(([n, th, base], i) => {
+        const cpu = Math.max(0, Math.min(99, base + (Math.random() * 14 - 7))), bar = "█".repeat(Math.round(cpu / 10)).padEnd(10, "░");
+        rows[i].innerHTML = `${String(1000 + i * 37).padStart(5)}  <span class="${cpu > 60 ? "t-warn" : "t-ok"}">${bar}</span> ${cpu.toFixed(1).padStart(5)}%  ${esc(n)} <span class="t-dim">${th}thr</span>`;
+      });
+      await sleep(400);
+    }
+  }, "live process monitor");
+  cmd("tree", async () => {
+    const outl = [".", "├── about.txt", "├── contact.txt", "├── stack.txt", "└── projects/"];
+    FS["~/projects"].children.forEach((c, i, a) => outl.push(`    ${i === a.length - 1 ? "└──" : "├──"} <button class="t-cmd" data-cmd="cat projects/${c}">${c}</button>`));
+    outl.push("", "1 directory, " + (3 + FS["~/projects"].children.length) + " files");
+    await stream(outl, 25);
+  }, "the whole file tree");
+  cmd("man", args => {
+    const c = C[(args[0] || "").toLowerCase()];
+    if (!c) return line("usage: man &lt;command&gt;  — e.g. <c>man scan</c>", "t-err");
+    const name = args[0].toLowerCase(), h = c.help || Object.entries(C).find(([, v]) => v.fn === c.fn && v.help)?.[1].help || "an easter egg. no manual for you.";
+    stream([`<b>${esc(name.toUpperCase())}(1)</b>`, "", "NAME", `    ${esc(name)} — ${esc(h)}`, "", "SYNOPSIS", `    ${esc(name)} [args]`]);
+  }, "manual for a command");
+  cmd("uptime", () => { const up = Date.now() - BORN; line(`${new Date().toLocaleTimeString("en-GB")} up ${Math.floor(up / 864e5)} days, ${Math.floor(up / 36e5) % 24}:${String(Math.floor(up / 6e4) % 60).padStart(2, "0")}, 1 user (you)`); }, "how long this site has been up");
+  cmd("whois", () => stream(["domain ...... nicoogg.github.io", "owner ....... nicoogg", "role ........ developer @ GS Loft", "location .... Verona, Italy", "status ...... <span class='t-ok'>online</span>"]), "who owns this host");
   cmd("date", () => line(new Date().toString()), "current date");
   cmd("echo", args => line(esc(args.join(" "))), "print text");
   cmd("history", () => stream(hist.map((h, i) => `  ${String(i + 1).padStart(3)}  ${esc(h)}`), 6), "past commands");
@@ -196,6 +264,7 @@
     const parts = v.split(/\s+/);
     if (parts.length <= 1) return Object.keys(C).filter(k => C[k].help && k.startsWith(parts[0]));
     const last = parts[parts.length - 1], base = parts.slice(0, -1).join(" ") + " ";
+    if (parts[0] === "corvexai" || parts[0] === "ai") return ["--bench", "--oracle"].filter(t => t.startsWith(last)).map(t => base + t);
     if (["open", "ping"].includes(parts[0])) return N().projects.map(p => p.id).filter(id => id.startsWith(last)).map(id => base + id);
     if (parts[0] === "theme") return ["mono", "green", "amber"].filter(t => t.startsWith(last)).map(t => base + t);
     if (parts[0] === "git") return ["log"].filter(t => t.startsWith(last)).map(t => base + t);
@@ -208,6 +277,11 @@
   function updateGhost() {
     const v = input.value, c = v ? candidates(v.endsWith(" ") ? v : v)[0] : "";
     ghost.textContent = c && c.startsWith(v) && c !== v ? v + c.slice(v.length) : "";
+  }
+  function insert(txt) {
+    const a = input.selectionStart ?? input.value.length, b = input.selectionEnd ?? a;
+    input.value = input.value.slice(0, a) + txt + input.value.slice(b);
+    input.setSelectionRange(a + txt.length, a + txt.length); updateGhost(); caret();
   }
   const caret = () => input.parentNode.style.setProperty("--cx", input.selectionStart ?? input.value.length);
   input.addEventListener("input", () => { updateGhost(); caret(); });
@@ -232,20 +306,45 @@
   });
   out.addEventListener("click", e => { const b = e.target.closest(".t-cmd"); if (b) { e.stopPropagation(); typeAndRun(b.dataset.cmd); } });
   $("tChips").addEventListener("click", e => { const b = e.target.closest("[data-cmd]"); if (b) typeAndRun(b.dataset.cmd); });
-  body.addEventListener("mouseup", () => { if (!getSelection().toString()) input.focus({ preventScroll: true }); });
+  // on-screen keys for phones: keep the keyboard open (mousedown/pointerdown default prevented)
+  const keybar = $("tKeys");
+  keybar.addEventListener("pointerdown", e => { if (e.target.closest("button")) e.preventDefault(); });
+  keybar.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    input.focus({ preventScroll: true });
+    const k = b.dataset.k;
+    if (k === "ctrl-c") input.dispatchEvent(new KeyboardEvent("keydown", { key: "c", ctrlKey: true, bubbles: true }));
+    else if (k === "clear") { out.innerHTML = ""; }
+    else if (k === "enter") input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    else if (k.length === 1) insert(k);
+    else input.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true }));
+  });
+  body.addEventListener("click", e => { if (!getSelection().toString() && !e.target.closest("a, button")) input.focus({ preventScroll: true }); });
 
   /* ───────── window: toggle, minimize, maximize, drag ───────── */
   function minimize(on) { term.classList.toggle("min", on); if (!on) input.focus({ preventScroll: true }); }
   $("tMin").onclick = e => { e.stopPropagation(); minimize(!term.classList.contains("min")); };
   $("tMax").onclick = e => { e.stopPropagation(); term.classList.toggle("max"); term.style.left = term.style.top = ""; body.scrollTop = body.scrollHeight; };
   $("tClose").onclick = e => { e.stopPropagation(); minimize(true); };
-  $("termBtn").onclick = () => { minimize(!term.classList.contains("min") ? true : false); if (!term.classList.contains("min")) N().focusMap?.(); };
+  $("termBtn").onclick = () => {
+    if (term.classList.contains("docked")) { minimize(false); term.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+    minimize(!term.classList.contains("min"));
+  };
   term.querySelector(".t-bar").addEventListener("dblclick", () => $("tMax").click());
   term.querySelector(".t-bar").addEventListener("click", () => { if (term.classList.contains("min")) minimize(false); });
   addEventListener("keydown", e => {
     if (e.key === "`" || (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey))) {
       if (e.target === input && e.key === "`") return;
-      e.preventDefault(); minimize(!term.classList.contains("min"));
+      e.preventDefault(); minimize(!term.classList.contains("min")); return;
+    }
+    // typing anywhere on the page writes into the terminal
+    if (e.target === input || term.classList.contains("min") || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+    if (e.key.length === 1 || ["Enter", "Backspace", "ArrowUp", "ArrowDown", "Tab"].includes(e.key)) {
+      if (e.key === "Tab" && !document.activeElement.closest?.(".term")) return;  // keep Tab for page navigation
+      input.focus({ preventScroll: true });
+      if (e.key.length === 1) { e.preventDefault(); insert(e.key); }
+      else if (e.key !== "Enter") input.dispatchEvent(new KeyboardEvent("keydown", { key: e.key, bubbles: true }));
     }
   });
   (() => {  // drag by the title bar
@@ -286,6 +385,16 @@
     c.onclick = () => c.remove();
   }
 
+  const home = { parent: term.parentNode, next: term.nextSibling };
+  function placeTerm() {
+    const stacked = matchMedia("(max-width: 860px)").matches, intro = document.querySelector(".panel .intro");
+    // phones: the shell sits right under the title, it is the first thing you use
+    if (stacked && term.previousElementSibling !== intro) intro.after(term);
+    else if (!stacked && term.parentNode !== home.parent) home.parent.insertBefore(term, home.next);
+    term.classList.toggle("docked", stacked);
+  }
+  placeTerm(); addEventListener("resize", placeTerm);
+
   /* ───────── boot ───────── */
   term.dataset.theme = localStorage.getItem("nicoogg-theme") || "mono";
   renderPrompt();
@@ -294,9 +403,9 @@
     const hash = decodeURIComponent((location.hash.match(/run=([^&]+)/) || [])[1] || "");
     await stream([
       "<span class='t-art'>nicoogg.os 2.0</span> <span class='t-dim'>· tty1 · " + new Date().toLocaleDateString("en-GB") + "</span>",
-      "welcome, visitor. this portfolio is a shell: type a command or click one.",
-      "<span class='t-dim'>start with</span> <c>help</c> <c>neofetch</c> <c>projects</c> <c>git log</c> <c>scan</c>", ""], 60);
-    if (hash) { minimize(false); N().focusMap(); await sleep(300); typeAndRun(hash); }
+      "welcome, visitor. this portfolio is a shell: just start typing, or tap a command.",
+      "<span class='t-dim'>start with</span> <c>help</c> <c>neofetch</c> <c>projects</c> <c>corvexai</c> <c>git log</c> <c>scan</c>", ""], 60);
+    if (hash) { minimize(false); if (term.classList.contains("docked")) term.scrollIntoView({ behavior: "smooth", block: "center" }); await sleep(300); typeAndRun(hash); }
     else if (!N().stacked) input.focus({ preventScroll: true });
   };
   if (window.NICO) start(); else document.addEventListener("nico:ready", start, { once: true });

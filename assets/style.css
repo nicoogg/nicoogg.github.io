@@ -208,6 +208,16 @@ button.sq { cursor: pointer; position: relative; }
 .matrix { position: fixed; inset: 0; z-index: 60; pointer-events: auto; cursor: pointer; }
 #termBtn svg { stroke-width: 1.8; }
 
+.t-keys { display: none; flex: none; gap: 4px; padding: 6px 8px 0; overflow-x: auto; scrollbar-width: none; }
+.t-keys button { flex: 1 1 0; min-width: 0; padding: 0 2px; height: 34px; font-size: 12px; color: #ddd; background: #161616; border: 1px solid #2a2a2a; border-radius: 4px; }
+.t-keys button:active { background: #fff; color: #000; } .t-keys .go { background: #3ddc84; color: #000; border-color: #3ddc84; }
+@media (pointer: coarse) { .t-keys { display: flex; } }
+.term.docked { position: relative; inset: auto; z-index: 2; width: auto; height: 58vh; min-height: 340px; margin: 0; resize: none; min-width: 0; animation: none; font-size: 12.5px; }
+.term.docked .t-bar { cursor: default; }
+.term.docked.min { height: 34px !important; }
+.term.docked.max { position: fixed; inset: 0; margin: 0; height: auto !important; z-index: 40; }
+.term.docked .t-chips { flex-wrap: nowrap; }
+.term.docked .t-chips button { font-size: 11px; padding: 5px 10px; }
 @media (max-width: 1280px) and (min-width: 861px) { .term { width: min(460px, calc(100% - var(--pl, 0px) - 44px)); height: 270px; } }
 @media (max-width: 860px) {
   .frame { flex-direction: column; height: auto; min-height: 0; overflow: visible; }
@@ -216,8 +226,6 @@ button.sq { cursor: pointer; position: relative; }
   .hint { display: none; }
   .notes { right: -48px; width: min(300px, 86vw); }
   .xh { display: none; }
-  .term { left: 10px; right: 10px; bottom: 40px; width: auto; height: 300px; resize: none; min-width: 0; }
-  .term.max { position: fixed; inset: 0 !important; margin: 0; z-index: 40; }
   .lab { padding: 6px 8px; }
   .lab small { display: none; }
   .pop { width: min(250px, calc(100% - 24px)); }

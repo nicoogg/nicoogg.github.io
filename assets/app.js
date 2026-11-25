@@ -302,7 +302,7 @@
   function close() { current = null; pop.hidden = true; document.querySelectorAll("[data-id].on").forEach(e => e.classList.remove("on")); }
   map.addEventListener("click", e => {
     if (e.target.closest(".close")) return close();
-    if (e.target.closest(".top-right, .ticker")) return;
+    if (e.target.closest(".top-right, .ticker, .term")) return;
     const hit = e.target.closest("[data-id]");
     if (hit) open(hit.dataset.id);
     else if (!e.target.closest(".pop")) { close(); if (!reduce) ripples.push({ x: mouse.x, y: mouse.y, t: performance.now() }); }
@@ -313,7 +313,7 @@
   const order = PROJECTS.map(p => p.id);
   map.addEventListener("mousemove", e => {
     const cr = canvas.getBoundingClientRect(), mr = map.getBoundingClientRect();
-    mouse.x = e.clientX - cr.left; mouse.y = e.clientY - cr.top; mouse.in = !e.target.closest(".top-right, .pop, .ticker, .notes");
+    mouse.x = e.clientX - cr.left; mouse.y = e.clientY - cr.top; mouse.in = !e.target.closest(".top-right, .pop, .ticker, .notes, .term");
     const lx = e.clientX - mr.left, ly = e.clientY - mr.top;
     xh.hidden = !mouse.in; xh.style.setProperty("--x", lx + "px"); xh.style.setProperty("--y", ly + "px");
     const [mx, my] = toModel(mouse.x, mouse.y);
@@ -439,7 +439,8 @@
     const seen = +localStorage.getItem("nicoogg-seen") || 0, fresh = items.filter(i => new Date(i.at) > seen && Date.now() - new Date(i.at) < 7 * 864e5).length;
     if (fresh) { badge.textContent = fresh > 9 ? "9+" : fresh; badge.hidden = false; }
   }
-  fetch("https://api.github.com/users/nicoogg/events/public?per_page=30").then(r => r.ok ? r.json() : []).catch(() => []).then(fillActivity);
+  const eventsP = fetch("https://api.github.com/users/nicoogg/events/public?per_page=30").then(r => r.ok ? r.json() : []).catch(() => []);
+  eventsP.then(fillActivity);
   bell.onclick = e => {
     e.stopPropagation(); const o = notes.hidden; closeMenus(); notes.hidden = !o; bell.setAttribute("aria-expanded", String(o));
     if (o) { badge.hidden = true; localStorage.setItem("nicoogg-seen", Date.now()); notesList.querySelectorAll(".note").forEach(n => { n.style.animation = "none"; void n.offsetWidth; n.style.animation = ""; }); }
@@ -472,6 +473,20 @@
   });
   panel.querySelectorAll(".row > .card").forEach((el, i) => el.style.setProperty("--i", 2 + i));
   panel.querySelectorAll(".balance i").forEach((el, i) => el.style.setProperty("--k", i));
+
+  /* ───────── API for the terminal (term.js) ───────── */
+  window.NICO = {
+    projects: PROJECTS, open, close, highlight, describe, ago, events: eventsP, boot: bootDone, scramble,
+    get stacked() { return STACKED; },
+    ping(id) {  // ripple on a project block
+      const p = PROJECTS.find(q => q.id === id); if (!p) return false;
+      const [x, y] = toScreen(p.x, p.y); ripples.push({ x, y, t: performance.now() });
+      highlight(id, true); setTimeout(() => highlight(id, false), 900); return true;
+    },
+    pulse() { const [x, y] = toScreen(AVATAR.x, AVATAR.y); for (let i = 0; i < 3; i++) setTimeout(() => ripples.push({ x, y, t: performance.now() }), i * 220); },
+    focusMap() { if (STACKED) map.scrollIntoView({ behavior: "smooth" }); },
+  };
+  document.dispatchEvent(new Event("nico:ready"));
 
   /* ───────── start ───────── */
   function render() { layout(); drawBase(); drawShapes(); frame(performance.now()); if (current) { const id = current; open(id); } }

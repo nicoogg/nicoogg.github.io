@@ -111,6 +111,7 @@
     </div>
     <div class="xh" id="xh" hidden><i class="h"></i><i class="v"></i><span id="xhTxt"></span></div>
     <div class="top-right">
+      <button class="sq" id="termBtn" title="Terminal ( ` or ⌘K )"><svg viewBox="0 0 24 24"><path d="M5 7l5 5-5 5M12 17h7"/></svg></button>
       <a class="sq" href="https://github.com/nicoogg" target="_blank" rel="noopener" title="Say hi on GitHub">
         <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M8.5 13.5c1.8 1.6 5.2 1.6 7 0"/></svg>
       </a>
@@ -121,11 +122,28 @@
       <a class="sq avatar" href="https://github.com/nicoogg" target="_blank" rel="noopener" title="nicoogg"><img src="assets/avatar.png" alt="nicoogg"></a>
     </div>
     <article class="pop" id="pop" hidden></article>
-    <p class="hint">click a block · keys 1–5 · ← →</p>
+
+    <section class="term" id="term" aria-label="Terminal">
+      <header class="t-bar">
+        <span class="t-dots"><button id="tClose" aria-label="Minimize"></button><button id="tMin" aria-label="Minimize"></button><button id="tMax" aria-label="Maximize"></button></span>
+        <span class="t-title">nicoogg@verona: ~ — portfolio-sh</span>
+        <span class="t-key">` / ⌘K</span>
+      </header>
+      <div class="t-body" id="tBody">
+        <div id="tOut"></div>
+        <label class="t-row"><span id="tPrompt"></span><span class="t-field"><span class="t-ghost" id="tGhost"></span><input id="tIn" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type a command"></span></label>
+      </div>
+      <nav class="t-chips" id="tChips">
+        <button data-cmd="help">help</button><button data-cmd="neofetch">neofetch</button><button data-cmd="projects">projects</button>
+        <button data-cmd="git log">git log</button><button data-cmd="scan">scan</button><button data-cmd="matrix">matrix</button>
+      </nav>
+    </section>
+    <p class="hint">click a block · keys 1–5 · ← → · ` terminal</p>
     <div class="ticker"><span class="tk-l"><i></i>live · github</span><div class="tk-track"><div class="tk-run" id="ticker"><span>fetching activity…</span></div></div></div>
   </section>
 
 </main>
 <script src="assets/app.js"></script>
+<script src="assets/term.js"></script>
 </body>
 </html>

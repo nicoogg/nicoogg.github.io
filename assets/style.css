@@ -165,6 +165,50 @@ button.sq { cursor: pointer; position: relative; }
 @keyframes marquee { to { transform: translateX(-50%); } }
 .hint { bottom: 42px; }
 
+/* ───────── terminal ───────── */
+.term { --tc: #e6e6e6; --ta: #fff; --tdim: #6b6b6b; --tok: #3ddc84; --tbg: rgba(6,6,6,.92);
+  position: absolute; z-index: 5; right: 22px; bottom: 50px; width: min(560px, calc(100% - 44px)); height: 330px; display: flex; flex-direction: column;
+  background: var(--tbg); border: 1px solid #2a2a2a; box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.03) inset;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: var(--tc); font-size: 11.5px; line-height: 1.6; cursor: text;
+  animation: termIn .6s var(--ease) both; animation-delay: .4s; transition: height .35s var(--ease), width .35s var(--ease), opacity .25s; resize: both; overflow: hidden; min-width: 320px; min-height: 160px; }
+@keyframes termIn { from { opacity: 0; transform: translateY(16px) scale(.98); } }
+.term[data-theme="green"] { --tc: #7dffb0; --ta: #b9ffd6; --tdim: #2f7a4d; --tok: #b9ffd6; --tbg: rgba(2,12,6,.94); text-shadow: 0 0 6px rgba(61,220,132,.35); }
+.term[data-theme="amber"] { --tc: #ffc66d; --ta: #ffe1a8; --tdim: #8a6524; --tok: #ffe1a8; --tbg: rgba(14,8,0,.94); text-shadow: 0 0 6px rgba(245,165,36,.35); }
+.term::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px); }
+.term.min { height: 34px !important; min-height: 0; resize: none; }
+.term.min .t-body, .term.min .t-chips { visibility: hidden; }
+.term.max { left: calc(var(--pl, 0px) + 22px) !important; top: 70px !important; right: 22px !important; bottom: 50px !important; width: auto !important; height: auto !important; resize: none; }
+.term.drag { transition: none; opacity: .9; }
+.t-bar { flex: none; height: 34px; display: flex; align-items: center; gap: 12px; padding: 0 12px; border-bottom: 1px solid #1f1f1f; cursor: grab; user-select: none; }
+.term.drag .t-bar { cursor: grabbing; }
+.t-dots { display: flex; gap: 7px; } .t-dots button { width: 11px; height: 11px; border-radius: 50%; background: #2b2b2b; transition: background .15s; }
+.t-bar:hover #tClose { background: #ff5f57; } .t-bar:hover #tMin { background: #febc2e; } .t-bar:hover #tMax { background: #28c840; }
+.t-title { flex: 1; text-align: center; font-size: 10px; color: #777; }
+.t-key { font-size: 8px; color: #555; border: 1px solid #2a2a2a; padding: 1px 5px; }
+.t-body { flex: 1; overflow-y: auto; padding: 10px 14px 4px; scrollbar-width: thin; scrollbar-color: #333 transparent; }
+.t-line { white-space: pre-wrap; word-break: break-word; animation: tl .18s ease both; }
+@keyframes tl { from { opacity: 0; transform: translateX(-4px); } }
+.t-line a { color: var(--ta); text-decoration: underline; text-underline-offset: 2px; } .t-line b { color: var(--ta); font-weight: 500; }
+.t-u { color: var(--tok); } .t-p { color: #6f9bff; } .term[data-theme] .t-p { color: var(--ta); }
+.t-in { color: var(--ta); } .t-dim { color: var(--tdim); } .t-ok { color: var(--tok); } .t-err { color: #ff6b6b; } .t-warn { color: #f5a524; } .t-k { color: var(--tok); }
+.t-art { color: var(--ta); }
+.t-sw { display: inline-block; width: 18px; height: 10px; margin-right: 3px; }
+.t-cmd { color: var(--ta); border-bottom: 1px dashed currentColor; padding: 0; line-height: 1.2; cursor: pointer; font-size: inherit; }
+.t-cmd:hover { background: var(--ta); color: #000; border-color: transparent; }
+.t-dir { color: #6f9bff; }
+.t-row { display: flex; gap: 8px; align-items: baseline; padding: 2px 0 8px; cursor: text; }
+.t-field { position: relative; flex: 1; }
+.t-field input { width: 100%; background: none; border: 0; outline: 0; color: var(--ta); font: inherit; caret-color: transparent; padding: 0; position: relative; z-index: 1; }
+.t-ghost { position: absolute; left: 0; top: 0; color: var(--tdim); white-space: pre; pointer-events: none; }
+.t-field::after { content: ""; position: absolute; top: 2px; left: calc(var(--cx, 0) * 1ch); width: .62em; height: 1.15em; background: var(--ta); animation: blink 1.05s steps(1) infinite; pointer-events: none; }
+.term:not(:focus-within) .t-field::after { background: transparent; outline: 1px solid var(--ta); animation: none; }
+.t-chips { flex: none; display: flex; gap: 6px; padding: 7px 12px; border-top: 1px solid #1f1f1f; overflow-x: auto; scrollbar-width: none; }
+.t-chips button { flex: none; font-size: 9px; color: #9a9a9a; border: 1px solid #2a2a2a; padding: 3px 8px; transition: all .15s; }
+.t-chips button:hover { color: #000; background: #fff; border-color: #fff; }
+.matrix { position: fixed; inset: 0; z-index: 60; pointer-events: auto; cursor: pointer; }
+#termBtn svg { stroke-width: 1.8; }
+
+@media (max-width: 1280px) and (min-width: 861px) { .term { width: min(460px, calc(100% - var(--pl, 0px) - 44px)); height: 270px; } }
 @media (max-width: 860px) {
   .frame { flex-direction: column; height: auto; min-height: 0; overflow: visible; }
   .panel { width: auto; margin: 10px; overflow: visible; }
@@ -172,6 +216,8 @@ button.sq { cursor: pointer; position: relative; }
   .hint { display: none; }
   .notes { right: -48px; width: min(300px, 86vw); }
   .xh { display: none; }
+  .term { left: 10px; right: 10px; bottom: 40px; width: auto; height: 300px; resize: none; min-width: 0; }
+  .term.max { position: fixed; inset: 0 !important; margin: 0; z-index: 40; }
   .lab { padding: 6px 8px; }
   .lab small { display: none; }
   .pop { width: min(250px, calc(100% - 24px)); }

@@ -114,4 +114,43 @@ h2 { font: 400 10.5px/1.3 "Geist Mono", monospace; }
   .lab small { display: none; }
   .pop { width: min(250px, calc(100% - 24px)); }
 }
+/* ───────── motion, Corvex style ───────── */
+:root { --ease: cubic-bezier(.2,.8,.2,1); }
+.mark { animation: spin 24s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.dec { display: inline-block; }
+.caret { display: inline-block; width: .5em; height: .82em; background: #000; margin-left: .12em; vertical-align: -.06em; animation: blink 1.05s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.panel > * { animation: rise .6s var(--ease) both; animation-delay: calc(var(--i, 0) * 80ms + .1s); }
+.row > .card { animation: rise .6s var(--ease) both; animation-delay: calc(var(--i, 0) * 80ms + .1s); }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+.card { overflow: visible; background-image: radial-gradient(180px circle at var(--mx, -200px) var(--my, -200px), rgba(0,0,0,.05), transparent 70%); }
+.card::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: linear-gradient(90deg, transparent, #000, transparent);
+  opacity: 0; animation: sweep 1.2s var(--ease) both; animation-delay: calc(var(--i, 0) * 80ms + .35s); pointer-events: none; }
+@keyframes sweep { 0% { opacity: .55; transform: translateY(0); } 100% { opacity: 0; transform: translateY(120px); } }
+.tag .live { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #3ddc84; margin-right: 5px; vertical-align: 1px; animation: on-pulse 2s infinite; }
+.tag .live.off { background: #bbb; animation: none; }
+@keyframes on-pulse { 0% { box-shadow: 0 0 0 0 rgba(61,220,132,.6); } 70% { box-shadow: 0 0 0 5px rgba(61,220,132,0); } 100% { box-shadow: 0 0 0 0 rgba(61,220,132,0); } }
+.balance i { transform-origin: left; animation: growx 1s var(--ease) both; animation-delay: calc(var(--k, 0) * 90ms + .7s); }
+@keyframes growx { from { transform: scaleX(0); } }
+.wires path { animation: dash 1s linear infinite; }
+@keyframes dash { to { stroke-dashoffset: -6; } }
+.nodes rect { transform-box: fill-box; transform-origin: center; animation: pop .45s var(--ease) both; }
+.nodes rect:nth-child(2) { animation-delay: .9s } .nodes rect:nth-child(3) { animation-delay: 1s } .nodes rect:nth-child(4) { animation-delay: 1.05s }
+.nodes rect:nth-child(5) { animation-delay: 1.2s } .nodes rect:nth-child(6) { animation-delay: 1.35s } .nodes rect:first-child { animation-delay: .8s }
+@keyframes pop { from { transform: scale(0); } }
+
+#shapes .wire { stroke: rgba(255,255,255,.35); stroke-width: 1; stroke-dasharray: 3 5; fill: none; animation: dash2 1.2s linear infinite; }
+@keyframes dash2 { to { stroke-dashoffset: -16; } }
+#shapes.intro .blk:not(.ghost) path { fill-opacity: 0; animation: fillin .8s ease forwards; animation-delay: calc(var(--i) * 140ms + 1.2s); }
+#shapes.intro .blk:not(.ghost) path.o { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.3s var(--ease) forwards, fillin .8s ease forwards; animation-delay: calc(var(--i) * 140ms + .5s), calc(var(--i) * 140ms + 1.2s); }
+#shapes.intro .blk.ghost { opacity: 0; animation: fade 1s ease 1.4s forwards; }
+#shapes.intro .wire { opacity: 0; animation: dash2 1.2s linear infinite, fade .8s ease 1.8s forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fillin { to { fill-opacity: 1; } }
+@keyframes fade { to { opacity: 1; } }
+.lab.intro { animation: labin .5s var(--ease) both; animation-delay: calc(var(--i, 0) * 140ms + 1s); }
+@keyframes labin { from { opacity: 0; transform: translate(-50%, -20%); } }
+.lab:hover { animation: none; }
+
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

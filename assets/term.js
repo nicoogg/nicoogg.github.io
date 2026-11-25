@@ -156,6 +156,112 @@
     if (!ok.includes(t)) return line(`usage: theme &lt;${ok.join("|")}&gt; · now: ${term.dataset.theme || "mono"}`);
     term.dataset.theme = t; localStorage.setItem("nicoogg-theme", t); line(`theme set to ${t}`, "t-ok");
   }, "terminal colors: mono | green | amber");
+  /* ───────── FIREWALL: a typing minigame ───────── */
+  // Attacks fly from the right toward the core. Type an attack's name to block it before it hits.
+  const ATTACKS = ["xss", "sqli", "rce", "csrf", "ssrf", "phish", "worm", "trojan", "botnet", "exploit", "payload", "rootkit", "spoof",
+    "ddos", "zeroday", "malware", "inject", "backdoor", "keylog", "ransom", "bruteforce", "overflow", "sniffer", "hijack", "spyware", "leak"];
+  let game = null;
+  const charW = () => { const m = document.createElement("span"); m.textContent = "MMMMMMMMMM"; m.style.cssText = "position:absolute;visibility:hidden;white-space:pre"; out.appendChild(m); const w = m.getBoundingClientRect().width / 10; m.remove(); return w || 7; };
+  function startGame(args) {
+    if (game) return;
+    if (args[0] === "--scores" || args[0] === "scores") return line(`best score: <b>${+localStorage.getItem("nicoogg-fw-best") || 0}</b>`);
+    const cols = Math.max(26, Math.min(66, Math.floor((body.clientWidth - 30) / charW()))), rows = 9;
+    line("<b>FIREWALL</b> <span class='t-dim'>· corvex defense drill</span>");
+    line("type an attack's name to block it before it hits the core <span class='t-ok'>[■]</span>. <span class='t-dim'>esc quits.</span>");
+    const hud = line(""), field = line("", "g-field"), msg = line("", "t-dim");
+    const now = performance.now();
+    game = { cols, rows, hud, field, msg, threats: [], booms: [], score: 0, kills: 0, level: 1, hp: 5, combo: 0, best: +localStorage.getItem("nicoogg-fw-best") || 0,
+      last: now, spawnAt: now + 600, drawn: 0, hurtUntil: 0 };
+    input.value = ""; ghost.textContent = ""; input.focus({ preventScroll: true });
+    term.classList.add("gaming");
+    return new Promise(res => { game.done = res; requestAnimationFrame(gameTick); });
+  }
+  function spawn(now) {
+    const g = game, used = new Set(g.threats.map(t => t.w)), free = ATTACKS.filter(w => !used.has(w) && w.length <= 4 + g.level * 2);
+    const w = free[Math.floor(Math.random() * free.length)] || ATTACKS[0];
+    const busy = new Set(g.threats.filter(t => t.x > g.cols - 16).map(t => t.y));
+    const rowsFree = [...Array(g.rows).keys()].filter(r => !busy.has(r));
+    if (!rowsFree.length) return;
+    g.threats.push({ w, x: g.cols, y: rowsFree[Math.floor(Math.random() * rowsFree.length)], v: .9 + Math.random() * .3 });
+    g.spawnAt = now + Math.max(520, 2100 - g.level * 170) * (.8 + Math.random() * .4);
+  }
+  function gameTick(now) {
+    const g = game; if (!g) return;
+    const dt = Math.min(.1, (now - g.last) / 1000); g.last = now;
+    if (now >= g.spawnAt) spawn(now);
+    const speed = 2.6 + g.level * .9;
+    for (const t of g.threats) t.x -= speed * t.v * dt;
+    for (const t of g.threats.filter(t => t.x <= 5)) {
+      g.threats.splice(g.threats.indexOf(t), 1);
+      g.hp--; g.combo = 0; g.hurtUntil = now + 350; g.booms.push({ x: 4, y: t.y, t: now, hit: true });
+      term.classList.remove("hurt"); void term.offsetWidth; term.classList.add("hurt");
+      N().pulse();
+      if (g.hp <= 0) return endGame("breach");
+    }
+    g.booms = g.booms.filter(b => now - b.t < 380);
+    if (now - g.drawn > 45) { drawGame(now); g.drawn = now; }
+    requestAnimationFrame(gameTick);
+  }
+  function drawGame(now) {
+    const g = game, typed = input.value.trim().toLowerCase(), mid = Math.floor(g.rows / 2);
+    const grid = [...Array(g.rows)].map(() => Array(g.cols).fill(" "));
+    const cls = [...Array(g.rows)].map(() => Array(g.cols).fill(""));
+    // locked target: the closest attack that starts with what you typed
+    const lock = typed ? g.threats.filter(t => t.w.startsWith(typed)).sort((a, b) => a.x - b.x)[0] : null;
+    for (let y = 0; y < g.rows; y++) { grid[y][4] = now < g.hurtUntil ? "▓" : "│"; cls[y][4] = now < g.hurtUntil ? "g-hurt" : "g-wall"; }
+    for (let x = 6; x < g.cols; x += 4) for (let y = 0; y < g.rows; y += 2) if (grid[y][x] === " ") { grid[y][x] = "·"; cls[y][x] = "g-dot"; }
+    ["[", "■", "]"].forEach((c, i) => { grid[mid][i] = c; cls[mid][i] = "g-core"; });
+    for (const t of g.threats) {
+      const x0 = Math.round(t.x);
+      [...("◂" + t.w)].forEach((c, i) => {
+        const x = x0 + i; if (x < 5 || x >= g.cols) return;
+        grid[t.y][x] = c;
+        cls[t.y][x] = t === lock ? (i > 0 && i <= typed.length ? "g-hit" : "g-lock") : "g-threat";
+      });
+    }
+    for (const b of g.booms) ["✶", "·", "✶"].forEach((c, i) => { const x = Math.round(b.x) + i - 1; if (x >= 5 && x < g.cols) { grid[b.y][x] = c; cls[b.y][x] = b.hit ? "g-hurt" : "g-boom"; } });
+    g.field.innerHTML = grid.map((row, y) => {
+      let html = "", cur = null, buf = "";
+      row.forEach((c, x) => { const k = cls[y][x]; if (k !== cur) { if (buf) html += cur ? `<span class="${cur}">${esc(buf)}</span>` : esc(buf); buf = ""; cur = k; } buf += c; });
+      if (buf) html += cur ? `<span class="${cur}">${esc(buf)}</span>` : esc(buf);
+      return html;
+    }).join("\n");
+    const hp = "█".repeat(g.hp).padEnd(5, "░");
+    g.hud.innerHTML = `score <b>${g.score}</b> · level <b>${g.level}</b> · combo <span class="t-warn">x${Math.max(1, g.combo)}</span> · core <span class="${g.hp <= 2 ? "t-err" : "t-ok"}">${hp}</span> · best ${Math.max(g.best, g.score)}`;
+    body.scrollTop = body.scrollHeight;
+  }
+  function gameInput() {
+    const g = game, v = input.value.trim().toLowerCase();
+    if (!v) return;
+    const t = g.threats.find(x => x.w === v);
+    if (t) {
+      g.threats.splice(g.threats.indexOf(t), 1);
+      g.combo++; g.kills++;
+      g.score += t.w.length * 10 * g.level * Math.max(1, Math.min(5, g.combo));
+      g.booms.push({ x: t.x + 1, y: t.y, t: performance.now() });
+      const lvl = 1 + Math.floor(g.kills / 7);
+      if (lvl > g.level) { g.level = lvl; g.msg.innerHTML = `<span class="t-ok">level ${lvl} · attacks get faster</span>`; N().pulse(); }
+      const proj = N().projects.filter(p => !p.ghost); N().ping(proj[g.kills % proj.length].id);
+      input.value = "";
+    } else if (!g.threats.some(x => x.w.startsWith(v))) {
+      g.combo = 0; input.classList.remove("miss"); void input.offsetWidth; input.classList.add("miss");
+    }
+  }
+  function endGame(reason) {
+    const g = game; if (!g) return;
+    game = null; term.classList.remove("gaming");
+    drawGameFinal(g);
+    const best = Math.max(g.best, g.score), rec = g.score > g.best && g.score > 0;
+    localStorage.setItem("nicoogg-fw-best", best);
+    g.msg.innerHTML = "";
+    line(reason === "breach" ? "<span class='t-err'>CORE BREACHED.</span> corvex would have caught that one." : "<span class='t-dim'>drill aborted.</span>");
+    line(`blocked <b>${g.kills}</b> attacks · score <b>${g.score}</b> · level ${g.level}${rec ? " · <span class='t-ok'>new best!</span>" : ` · best ${best}`}`);
+    line("<c>firewall</c> to play again");
+    input.value = ""; g.done();
+  }
+  function drawGameFinal(g) { g.field.classList.add("g-over"); }
+  cmd("firewall play game defend", startGame, "minigame: type attacks to block them");
+
   cmd("matrix", () => { matrix(); line("wake up, neo…", "t-ok"); }, "follow the white rabbit");
   cmd("banner figlet", () => stream([
     "█▄ █ █ █▀▀ █▀█ █▀█ █▀▀ █▀▀",
@@ -251,6 +357,7 @@
   // commands run one after another, even when clicked fast
   const exec = (raw, silent) => (queue = queue.then(() => run(raw, silent)));
   async function typeAndRun(cmdText) {
+    if (game) return;
     if (reduce) return exec(cmdText);
     await queue;
     input.value = "";
@@ -275,20 +382,29 @@
       .map(n => base + (dirPart ? dirPart + "/" : "") + n + (FS[resolve((dirPart ? dirPart + "/" : "") + n)].type === "dir" ? "/" : ""));
   }
   function updateGhost() {
+    if (game) { ghost.textContent = ""; return; }
     const v = input.value, c = v ? candidates(v.endsWith(" ") ? v : v)[0] : "";
     ghost.textContent = c && c.startsWith(v) && c !== v ? v + c.slice(v.length) : "";
   }
   function insert(txt) {
     const a = input.selectionStart ?? input.value.length, b = input.selectionEnd ?? a;
     input.value = input.value.slice(0, a) + txt + input.value.slice(b);
-    input.setSelectionRange(a + txt.length, a + txt.length); updateGhost(); caret();
+    input.setSelectionRange(a + txt.length, a + txt.length);
+    if (game) gameInput(); else updateGhost();
+    caret();
   }
   const caret = () => input.parentNode.style.setProperty("--cx", input.selectionStart ?? input.value.length);
-  input.addEventListener("input", () => { updateGhost(); caret(); });
+  input.addEventListener("input", () => { if (game) { gameInput(); caret(); return; } updateGhost(); caret(); });
   ["keyup", "click", "focus", "select"].forEach(ev => input.addEventListener(ev, caret));
   setInterval(caret, 120);
   input.addEventListener("keydown", e => {
     e.stopPropagation();  // keys typed here never move the map
+    if (game) {
+      if (e.key === "Escape") { e.preventDefault(); endGame("quit"); }
+      else if (e.key === "Enter") { e.preventDefault(); if (input.value.trim().toLowerCase() === "quit") endGame("quit"); else { gameInput(); input.value = ""; } }
+      else if (e.key === "Tab" || e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+      return;
+    }
     if (e.key === "Enter") { const v = input.value; input.value = ""; ghost.textContent = ""; exec(v); }
     else if (e.key === "Tab") {
       e.preventDefault();
@@ -404,7 +520,7 @@
     await stream([
       "<span class='t-art'>nicoogg.os 2.0</span> <span class='t-dim'>· tty1 · " + new Date().toLocaleDateString("en-GB") + "</span>",
       "welcome, visitor. this portfolio is a shell: just start typing, or tap a command.",
-      "<span class='t-dim'>start with</span> <c>help</c> <c>neofetch</c> <c>projects</c> <c>corvexai</c> <c>git log</c> <c>scan</c>", ""], 60);
+      "<span class='t-dim'>start with</span> <c>help</c> <c>neofetch</c> <c>projects</c> <c>corvexai</c> <c>git log</c> <c>scan</c>", "<span class='t-dim'>bored? play</span> <c>firewall</c>", ""], 60);
     if (hash) { minimize(false); if (term.classList.contains("docked")) term.scrollIntoView({ behavior: "smooth", block: "center" }); await sleep(300); typeAndRun(hash); }
     else if (!N().stacked) input.focus({ preventScroll: true });
   };

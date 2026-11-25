@@ -204,7 +204,16 @@ button.sq { cursor: pointer; position: relative; }
 .term:not(:focus-within) .t-field::after { background: transparent; outline: 1px solid var(--ta); animation: none; }
 .t-chips { flex: none; display: flex; gap: 6px; padding: 7px 12px; border-top: 1px solid #1f1f1f; overflow-x: auto; scrollbar-width: none; }
 .t-chips button { flex: none; font-size: 9px; color: #9a9a9a; border: 1px solid #2a2a2a; padding: 3px 8px; transition: all .15s; }
+.t-chips .play { color: #3ddc84; border-color: #1f5a3a; }
 .t-chips button:hover { color: #000; background: #fff; border-color: #fff; }
+.g-field { line-height: 1.22; letter-spacing: 0; padding: 4px 0; animation: none; }
+.g-wall { color: var(--tdim); } .g-dot { color: #262626; } .g-core { color: var(--tok); font-weight: 500; }
+.g-threat { color: #ff6b6b; } .g-lock { color: #fff; background: rgba(255,107,107,.18); } .g-hit { color: #000; background: var(--tok); }
+.g-boom { color: #f5a524; } .g-hurt { color: #ff6b6b; }
+.g-over { opacity: .35; filter: grayscale(1); }
+.term.hurt { animation: hurt .35s ease; } @keyframes hurt { 30% { border-color: #ff6b6b; box-shadow: 0 0 0 1px #ff6b6b, 0 30px 80px rgba(255,60,60,.25); } }
+.term.gaming .t-field::before { content: "type ▸"; position: absolute; right: 0; top: 0; font-size: 9px; color: var(--tdim); }
+.t-field input.miss { animation: miss .25s; } @keyframes miss { 30% { color: #ff6b6b; transform: translateX(3px); } 60% { transform: translateX(-3px); } }
 .matrix { position: fixed; inset: 0; z-index: 60; pointer-events: auto; cursor: pointer; }
 #termBtn svg { stroke-width: 1.8; }
 

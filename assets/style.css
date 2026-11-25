@@ -84,6 +84,9 @@ h2 { font: 400 10.5px/1.3 "Geist Mono", monospace; }
   letter-spacing: -.02em; white-space: nowrap; pointer-events: auto; cursor: pointer; border: 1px solid transparent; transition: border-color .2s; }
 .lab small { display: block; margin-top: 5px; font-size: 7px; letter-spacing: .08em; text-transform: uppercase; color: #8d8d8d; }
 .lab:hover, .lab.on { border-color: #fff; }
+.lab.acc { color: var(--acc); } .lab.acc small { color: color-mix(in srgb, var(--acc) 60%, #000); } .lab.acc:hover, .lab.acc.on { border-color: var(--acc); }
+#shapes .blk[style*="--acc"]:hover path.o, #shapes .blk[style*="--acc"].on path.o { filter: drop-shadow(0 0 12px color-mix(in srgb, var(--acc) 55%, transparent)); }
+.tool.cc { color: #8a6ce0; } .tool.cc:hover { background: #efe9ff; }
 .lab .no { font-size: .72em; vertical-align: .32em; margin-right: 1px; }
 
 .top-right { position: absolute; z-index: 4; top: 22px; right: 22px; display: flex; gap: 14px; }
@@ -192,6 +195,8 @@ button.sq { cursor: pointer; position: relative; }
 .t-u { color: var(--tok); } .t-p { color: #6f9bff; } .term[data-theme] .t-p { color: var(--ta); }
 .t-in { color: var(--ta); } .t-dim { color: var(--tdim); } .t-ok { color: var(--tok); } .t-err { color: #ff6b6b; } .t-warn { color: #f5a524; } .t-k { color: var(--tok); }
 .t-art { color: var(--ta); }
+.t-cc { color: #B69CFF; } .t-cc b { color: #B69CFF; }
+.t-chips .cc { color: #B69CFF; border-color: #4a3d78; }
 .t-sw { display: inline-block; width: 18px; height: 10px; margin-right: 3px; }
 .t-cmd { color: var(--ta); border-bottom: 1px dashed currentColor; padding: 0; line-height: 1.2; cursor: pointer; font-size: inherit; }
 .t-cmd:hover { background: var(--ta); color: #000; border-color: transparent; }

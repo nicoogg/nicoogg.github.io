@@ -20,6 +20,10 @@
       status: "In development", color: "#3ddc84",
       text: "Our own AI model, built in-house for one job: security. 4B parameters, runs on your machine on 127.0.0.1, no question ever leaves. It powers CORVUS and the ORACLE code audit inside Corvex.",
       links: [["corvexai page", "https://corvexdevelops.github.io/corvexai.html"], ["Open source", "https://github.com/CorvexDevelops"]] },
+    { id: "corvex-code", no: "06", name: "corvex-code", x: 845, y: 150, size: 112, rot: 135, lab: [868, 64], labM: [770, 66],
+      status: "Live · v0.1", color: "#B69CFF", accent: "#B69CFF",
+      text: "The executable code editor from Corvex: runs Python, JS, C, Go, Rust and more on your machine, chains scripts into flows, puts Claude Code, Codex and Gemini next to the code, and Corvex flags issues as you type. Portable for macOS and Windows, updates itself.",
+      links: [["Page", "https://corvexdevelops.github.io/corvex-code.html"], ["Download", "https://github.com/CorvexDevelops/corvex-code-releases/releases/latest"]] },
     { id: "you", no: "05", name: "your idea", x: 860, y: 360, size: 130, rot: 225, ghost: true, lab: [870, 470], labM: [790, 480],
       status: "Open slot", color: "#fff",
       text: "Have a project in mind? Get in touch on GitHub and let's build it.",
@@ -216,7 +220,7 @@
       for (let k = 0; k < 2; k++) {
         let q = (((t - boot) / (1400 + d * 4)) + i * .27 + k * .5) % 1; if (k) q = 1 - q;  // one packet out, one back
         const x = cx + (bx - cx) * q, y = cy + (by - cy) * q;
-        ctx.fillStyle = k ? "rgba(255,255,255,.55)" : "#fff"; ctx.fillRect(x - 2, y - 2, 4, 4);
+        ctx.fillStyle = p.accent ? (k ? p.accent + "8c" : p.accent) : (k ? "rgba(255,255,255,.55)" : "#fff"); ctx.fillRect(x - 2, y - 2, 4, 4);
       }
     });
     for (const [x, y, ph, sz] of twinkles) {
@@ -243,7 +247,8 @@
         const gEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
         gEl.setAttribute("class", "blk"); gEl.dataset.id = p.id;
         gEl.style.setProperty("--i", i);
-        gEl.innerHTML = `<path class="o" pathLength="1" d="M${pts}Z" fill="#0d0d0d" stroke="#fff" stroke-width="1.6" stroke-linejoin="miter"/>`;
+        gEl.innerHTML = `<path class="o" pathLength="1" d="M${pts}Z" fill="#0d0d0d" stroke="${p.accent || "#fff"}" stroke-width="1.6" stroke-linejoin="miter"/>`;
+        if (p.accent) gEl.style.setProperty("--acc", p.accent);
         // a soft grain inside the block
         gEl.innerHTML += `<path d="M${pts}Z" fill="url(#grain)" pointer-events="none"/>`;
         svg.appendChild(gEl);
@@ -255,7 +260,7 @@
       }
       const [lx, ly] = labPos(p);
       const el = document.createElement("div");
-      el.className = firstDraw ? "lab intro" : "lab"; el.dataset.id = p.id; el.style.setProperty("--i", i);
+      el.className = firstDraw ? "lab intro" : "lab"; if (p.accent) { el.style.setProperty("--acc", p.accent); el.classList.add("acc"); } el.dataset.id = p.id; el.style.setProperty("--i", i);
       el.style.left = lx + "px"; el.style.top = ly + "px";
       el.style.fontSize = Math.max(10, Math.min(15, 14 * S)) + "px";
       el.innerHTML = `<span class="no">№</span><span class="nm">${p.no} ${p.name}</span><small>${p.status}</small>`;

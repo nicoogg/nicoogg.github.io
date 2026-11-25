@@ -31,10 +31,10 @@
       "web ......... Next.js · React · Node · static sites that load fast",
       "infra ....... Vercel · GitHub Actions · Supabase · Docker",
       "security .... SAST, secrets, CVE matching, local AI (corvexai)"] },
-    "~/projects": { type: "dir", children: ["corvex.md", "corvexai.md", "wantdownload.md", "gsloft.md", "your-idea.md"] },
+    "~/projects": { type: "dir", children: ["corvex.md", "corvexai.md", "corvex-code.md", "wantdownload.md", "gsloft.md", "your-idea.md"] },
     "~/.secret": { type: "file", body: () => ["you found it.", "the real secret: ship small, ship often. ☕", "(type <c>matrix</c>)"] },
   };
-  const projFile = { "corvex.md": "corvex", "wantdownload.md": "wantdownload", "gsloft.md": "gsloft", "corvexai.md": "corvexai", "your-idea.md": "you" };
+  const projFile = { "corvex.md": "corvex", "wantdownload.md": "wantdownload", "gsloft.md": "gsloft", "corvexai.md": "corvexai", "corvex-code.md": "corvex-code", "your-idea.md": "you" };
   Object.entries(projFile).forEach(([f, id]) => {
     FS["~/projects/" + f] = { type: "file", project: id, body: () => {
       const p = N().projects.find(q => q.id === id);
@@ -129,14 +129,14 @@
     for (const p of N().projects) {
       N().ping(p.id); await sleep(260);
       const st = p.ghost ? "<span class='t-dim'>filtered</span>" : p.status.toLowerCase().includes("live") ? "<span class='t-ok'>open<\/span>" : p.status === "Soon" ? "<span class='t-dim'>closed<\/span>" : "<span class='t-warn'>building<\/span>";
-      line(`  ${String(p.no).padStart(2, "0")}/tcp   ${st.padEnd(8)}   ${esc(p.name)}`);
+      line(`  ${String(p.no).padStart(2, "0")}/tcp   ${st.padEnd(8)}   ${p.accent ? `<span style="color:${p.accent}">${esc(p.name)}</span>` : esc(p.name)}`);
     }
     line(`scan done: ${N().projects.length} hosts, 0 vulnerabilities (corvex says hi)`, "t-ok");
   }, "scan the map");
   cmd("neofetch fetch", async () => {
     const up = Math.max(0, Date.now() - BORN), d = Math.floor(up / 864e5), h = Math.floor(up / 36e5) % 24;
     const art = ["      ██      ", "  ██  ██  ██  ", "    ██████    ", "  ██  ██  ██  ", "      ██      ", "              ", "              ", "              ", "              "];
-    const info = [`<b>${USER}</b>@<b>${HOST}</b>`, "---------------", `<span class="t-k">os</span>       nicoogg.os 2.0`, `<span class="t-k">host</span>     GS Loft`, `<span class="t-k">projects</span> ${N().projects.length} (1 live, 2 in dev)`, `<span class="t-k">ai</span>       corvexai 4B · local`,
+    const info = [`<b>${USER}</b>@<b>${HOST}</b>`, "---------------", `<span class="t-k">os</span>       nicoogg.os 2.0`, `<span class="t-k">host</span>     GS Loft`, `<span class="t-k">projects</span> ${N().projects.length} (2 live, 2 in dev)`, `<span class="t-k">ai</span>       corvexai 4B · local`,
       `<span class="t-k">uptime</span>   ${d}d ${h}h`, `<span class="t-k">shell</span>    portfolio-sh`, `<span class="t-k">stack</span>    python · ts · next.js`];
     await stream(art.map((a, i) => `<span class="t-art">${a}</span>  ${info[i] || ""}`), 30);
     line(["#000", "#444", "#888", "#ccc", "#fff", "#3ddc84", "#f5a524", "#6f9bff"].map(c => `<i class="t-sw" style="background:${c}"></i>`).join(""));
@@ -299,8 +299,25 @@
       "  powers ....... CORVUS (the assistant) and ORACLE (the AI code audit)", "",
       "more: <c>corvexai --bench</c>  <c>corvexai --oracle</c>  <c>open corvexai</c>"], 22);
   }, "our own security AI model (--bench, --oracle)");
+  cmd("corvex-code cc", async args => {
+    N().ping("corvex-code");
+    const v = "<span class='t-cc'>", e = "</span>";
+    const logo = ["  ▄▀      ▀▄  ", "▄▀    ▄▄    ▀▄", "▀▄    ▀▀    ▄▀", "  ▀▄      ▄▀  "];
+    const info = [`${v}<b>corvex-code</b>${e}  <span class='t-dim'>[live · v0.1 · by Corvex]</span>`, "the executable code editor: write, run, connect", "", ""];
+    await stream(logo.map((l, i) => `${v}${l}${e}  ${info[i]}`), 40);
+    await stream([
+      `  ${v}▷ run${e} ......... Python, JS, TS, Bash, C, C++, Go, Rust, Ruby, Java, Swift… with your interpreters`,
+      `  ${v}⌥ flow${e} ........ chain scripts on a canvas: one's output is the next one's input`,
+      `  ${v}✦ agents${e} ...... Claude Code, Codex and Gemini next to the code, in read, edit or full mode`,
+      `  ${v}◉ preview${e} ..... HTML, SVG, Markdown, CSV and images update while you type`,
+      `  ${v}■ corvex${e} ...... a local bridge on 127.0.0.1 flags issues line by line, code never leaves`,
+      `  ${v}↻ updates${e} ..... new versions install themselves after the Ed25519 signature checks out`, "",
+      `  download ↓  <a href="https://github.com/CorvexDevelops/corvex-code-releases/releases/latest/download/corvex-code-mac-arm64.zip">macOS Apple silicon</a> · <a href="https://github.com/CorvexDevelops/corvex-code-releases/releases/latest/download/corvex-code-mac-x64.zip">macOS Intel</a> · <a href="https://github.com/CorvexDevelops/corvex-code-releases/releases/latest/download/corvex-code-win-x64-portable.exe">Windows</a>`,
+      `  <span class='t-dim'>no installer: unzip on macOS, run the .exe on Windows ·</span> <a href="https://corvexdevelops.github.io/corvex-code.html" target="_blank" rel="noopener">the page ↗</a>`,
+      "", "<c>open corvex-code</c> to see it on the map"], 22);
+  }, "the executable code editor, by Corvex");
   cmd("top htop", async () => {
-    const procs = [["corvex-agents", 28, 41], ["corvexai (4B)", 8, 57], ["wantdownload", 2, 12], ["gsloft-portal", 4, 9], ["portfolio-sh", 1, 3], ["coffee", 1, 99]];
+    const procs = [["corvex-agents", 28, 41], ["corvexai (4B)", 8, 57], ["corvex-code", 6, 23], ["wantdownload", 2, 12], ["gsloft-portal", 4, 9], ["portfolio-sh", 1, 3], ["coffee", 1, 99]];
     const head = line(""), rows = procs.map(() => line(""));
     const t0 = Date.now();
     line("<span class='t-dim'>live for 6s · press any key to keep typing</span>");
@@ -520,7 +537,7 @@
     await stream([
       "<span class='t-art'>nicoogg.os 2.0</span> <span class='t-dim'>· tty1 · " + new Date().toLocaleDateString("en-GB") + "</span>",
       "welcome, visitor. this portfolio is a shell: just start typing, or tap a command.",
-      "<span class='t-dim'>start with</span> <c>help</c> <c>neofetch</c> <c>projects</c> <c>corvexai</c> <c>git log</c> <c>scan</c>", "<span class='t-dim'>bored? play</span> <c>firewall</c>", ""], 60);
+      "<span class='t-dim'>start with</span> <c>help</c> <c>neofetch</c> <c>projects</c> <c>corvexai</c> <c>corvex-code</c> <c>git log</c> <c>scan</c>", "<span class='t-dim'>bored? play</span> <c>firewall</c>", ""], 60);
     if (hash) { minimize(false); if (term.classList.contains("docked")) term.scrollIntoView({ behavior: "smooth", block: "center" }); await sleep(300); typeAndRun(hash); }
     else if (!N().stacked) input.focus({ preventScroll: true });
   };
